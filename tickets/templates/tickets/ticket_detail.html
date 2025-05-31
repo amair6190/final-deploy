@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Ticket #{{ ticket.id }} - {{ ticket.title }}{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-header">
+        <h3>#{{ ticket.id }} - {{ ticket.title }}</h3>
+    </div>
+    <div class="card-body">
+        <p><strong>Customer:</strong> {{ ticket.customer.username }}</p>
+        <p><strong>Status:</strong> {{ ticket.get_status_display }}</p>
+        <p><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
+        <p><strong>Agent:</strong> {{ ticket.agent.username|default:"Unassigned" }}</p>
+        <p><strong>Created:</strong> {{ ticket.created_at|date:"Y-m-d H:i:s" }}</p>
+        <p><strong>Last Updated:</strong> {{ ticket.updated_at|date:"Y-m-d H:i:s" }}</p>
+        <hr>
+        <p><strong>Description:</strong></p>
+        <p>{{ ticket.description|linebreaksbr }}</p>
+    </div>
+</div>
+
+{% if is_agent and not ticket.agent %}
+    <form method="post" action="{% url 'assign_ticket_to_self' ticket.id %}" class="mb-3">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Assign to Me</button>
+    </form>
+{% endif %}
+
+{% if is_agent and ticket_update_form %}
+    <div class="card mb-3">
+        <div class="card-header">Update Ticket Status/Priority</div>
+        <div class="card-body">
+            <form method="post" action="{% url 'update_ticket_by_agent' ticket.id %}">
+                {% csrf_token %}
+                {{ ticket_update_form.as_p }}
+                <button type="submit" class="btn btn-primary">Update Ticket</button>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+<h4>Messages</h4>
+<div class="messages-list mb-3" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    {% for message in messages %}
+        <div class="card mb-2 {% if message.sender == request.user %}bg-light{% endif %}">
+            <div class="card-body">
+                <p class="card-text">{{ message.content|linebreaksbr }}</p>
+                <footer class="blockquote-footer">
+                    {{ message.sender.username }} on {{ message.timestamp|date:"Y-m-d H:i" }}
+                </footer>
+            </div>
+        </div>
+    {% empty %}
+        <p>No messages yet.</p>
+    {% endfor %}
+</div>
+
+{% if ticket.status != 'CLOSED' and ticket.status != 'RESOLVED' or is_agent %}
+    <div class="card">
+        <div class="card-header">Post a Reply</div>
+        <div class="card-body">
+            <form method="post"> {# Action defaults to current URL for message posting #}
+                {% csrf_token %}
+                {{ message_form.as_p }}
+                <button type="submit" class="btn btn-primary">Post Message</button>
+            </form>
+        </div>
+    </div>
+{% else %}
+    <p class="alert alert-info">This ticket is {{ ticket.get_status_display }}. No further replies can be added by customers.</p>
+{% endif %}
+
+<hr>
+{% if is_customer %}
+    <a href="{% url 'customer_dashboard' %}" class="btn btn-secondary">Back to My Tickets</a>
+{% elif is_agent %}
+    <a href="{% url 'agent_dashboard' %}" class="btn btn-secondary">Back to Agent Dashboard</a>
+{% endif %}
+
+{% endblock %}

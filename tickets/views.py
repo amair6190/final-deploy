@@ -1,0 +1,168 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import Group
+from django.contrib import messages as django_messages # to avoid conflict with model name
+from .models import Ticket, Message
+from .forms import TicketCreationForm, MessageCreationForm, TicketUpdateForm
+from django.db.models import Q # For complex lookups
+
+# --- Helper function for checking group ---
+def is_in_group(user, group_name):
+    return user.groups.filter(name=group_name).exists()
+
+# --- User Registration ---
+def register_customer(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            customer_group = Group.objects.get(name='Customers')
+            user.groups.add(customer_group)
+            django_messages.success(request, 'Account created successfully! Please log in.')
+            return redirect('login') # Assuming you have a login URL named 'login'
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register_customer.html', {'form': form})
+
+# --- Customer Views ---
+@login_required
+def customer_dashboard(request):
+    if not is_in_group(request.user, 'Customers'):
+        # Or redirect to an appropriate dashboard if they are an agent/admin
+        django_messages.error(request, "Access Denied.")
+        return redirect('login') # Or a generic home page
+
+    tickets = Ticket.objects.filter(customer=request.user).order_by('-created_at')
+    return render(request, 'tickets/customer_dashboard.html', {'tickets': tickets})
+
+@login_required
+def create_ticket(request):
+    if not is_in_group(request.user, 'Customers'):
+        django_messages.error(request, "Access Denied.")
+        return redirect('customer_dashboard') # Or appropriate page
+
+    if request.method == 'POST':
+        form = TicketCreationForm(request.POST)
+        if form.is_valid():
+            ticket = form.save(commit=False)
+            ticket.customer = request.user
+            ticket.status = 'OPEN' # Default status
+            ticket.save()
+            django_messages.success(request, 'Ticket created successfully!')
+            return redirect('ticket_detail', ticket_id=ticket.id)
+    else:
+        form = TicketCreationForm()
+    return render(request, 'tickets/create_ticket.html', {'form': form})
+
+@login_required
+def ticket_detail(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    is_customer = is_in_group(request.user, 'Customers')
+    is_agent = is_in_group(request.user, 'Agents')
+
+    # Security: Customer can only see their own tickets
+    # Agent can see any ticket (or assigned ones depending on policy)
+    if is_customer and ticket.customer != request.user:
+        django_messages.error(request, "You are not authorized to view this ticket.")
+        return redirect('customer_dashboard')
+
+    if request.method == 'POST':
+        # This part handles adding a new message
+        message_form = MessageCreationForm(request.POST)
+        if message_form.is_valid():
+            message = message_form.save(commit=False)
+            message.ticket = ticket
+            message.sender = request.user
+            message.save()
+            # Update ticket's updated_at timestamp
+            ticket.save() # This will trigger auto_now on updated_at
+            django_messages.success(request, 'Message posted successfully!')
+            return redirect('ticket_detail', ticket_id=ticket.id)
+    else:
+        message_form = MessageCreationForm()
+
+    messages = ticket.messages.all().order_by('timestamp')
+    ticket_update_form = None
+    if is_agent: # Only agents see the ticket update form
+        ticket_update_form = TicketUpdateForm(instance=ticket)
+
+
+    context = {
+        'ticket': ticket,
+        'messages': messages,
+        'message_form': message_form,
+        'ticket_update_form': ticket_update_form,
+        'is_customer': is_customer,
+        'is_agent': is_agent,
+    }
+    return render(request, 'tickets/ticket_detail.html', context)
+
+
+# --- Agent Views ---
+@login_required
+def agent_dashboard(request):
+    if not is_in_group(request.user, 'Agents'):
+        django_messages.error(request, "Access Denied.")
+        return redirect('login')
+
+    # Agents see unassigned tickets and tickets assigned to them
+    unassigned_tickets = Ticket.objects.filter(agent__isnull=True, status__in=['OPEN', 'IN_PROGRESS']).order_by('-created_at')
+    assigned_tickets = Ticket.objects.filter(agent=request.user, status__in=['OPEN', 'IN_PROGRESS']).order_by('-created_at')
+    # Can also add resolved tickets if needed
+    resolved_tickets = Ticket.objects.filter(Q(agent=request.user) | Q(agent__isnull=True), status='RESOLVED').order_by('-updated_at')[:10]
+
+
+    context = {
+        'unassigned_tickets': unassigned_tickets,
+        'assigned_tickets': assigned_tickets,
+        'resolved_tickets': resolved_tickets,
+    }
+    return render(request, 'tickets/agent_dashboard.html', context)
+
+@login_required
+def assign_ticket_to_self(request, ticket_id):
+    if not is_in_group(request.user, 'Agents'):
+        django_messages.error(request, "Access Denied.")
+        return redirect('agent_dashboard')
+
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    if ticket.agent is None:
+        ticket.agent = request.user
+        ticket.status = 'IN_PROGRESS' # Optional: auto-change status
+        ticket.save()
+        django_messages.success(request, f'Ticket {ticket.id} assigned to you.')
+    else:
+        django_messages.warning(request, f'Ticket {ticket.id} is already assigned to {ticket.agent.username}.')
+    return redirect('ticket_detail', ticket_id=ticket.id)
+
+
+@login_required
+def update_ticket_by_agent(request, ticket_id):
+    if not is_in_group(request.user, 'Agents'):
+        django_messages.error(request, "Access Denied.")
+        return redirect('agent_dashboard')
+
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    # Agent should only update tickets they are assigned to, or any if admin/supervisor role
+    # For now, let's assume an agent can update any ticket status if they can access its detail page
+
+    if request.method == 'POST':
+        form = TicketUpdateForm(request.POST, instance=ticket)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, f'Ticket {ticket.id} status updated.')
+            return redirect('ticket_detail', ticket_id=ticket.id)
+    # This view is typically called from the ticket_detail page's form submission
+    # So, if it's a GET request or form is invalid, we redirect back.
+    return redirect('ticket_detail', ticket_id=ticket.id)
+
+
+# --- Basic Home Page (Can be login page or a simple welcome) ---
+def home(request):
+    if request.user.is_authenticated:
+        if is_in_group(request.user, 'Customers'):
+            return redirect('customer_dashboard')
+        elif is_in_group(request.user, 'Agents') or is_in_group(request.user, 'Admins'):
+            return redirect('agent_dashboard') # Admins might have their own later
+    return render(request, 'home.html') # A simple welcome or link to login/register
