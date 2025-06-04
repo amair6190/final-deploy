@@ -1,0 +1,152 @@
+{% extends "base_minimal.html" %}
+{% load static %}
+
+{% block title %}Create Your Account - SolvIT{% endblock %}
+
+{% block body_class %}registration-page-body{% endblock %} 
+
+{% block extra_head %}
+    {# Your custom theme CSS #}
+    <link rel="stylesheet" href="{% static 'css/registration_solvit_theme.css' %}">
+    {# Google Fonts - Montserrat for headings, Open Sans for body #}
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    {# Font Awesome for icons #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+{% endblock %}
+
+{% block content %}
+<div class="registration-container solv-it-theme">
+    {# Showcase Section (Left or Top on Mobile) #}
+    <div class="registration-showcase">
+        <div class="showcase-background-elements">
+            {# Subtle animated icons for the showcase background #}
+            <i class="fas fa-cogs animated-showcase-icon icon-cogs"></i>
+            <i class="fas fa-cloud animated-showcase-icon icon-cloud"></i>
+            <i class="fas fa-code animated-showcase-icon icon-code"></i>
+            <i class="fas fa-network-wired animated-showcase-icon icon-network"></i>
+        </div>
+        <div class="showcase-content">
+            <img src="{% static 'images/your_solvit_logo.png' %}" alt="SolvIT Logo" class="showcase-logo">
+            <h2 class="showcase-main-headline">Join Our Support Platform</h2>
+            <p class="showcase-sub-headline">Get quick and efficient help for all your IT needs with SolvIT.</p>
+            
+            <ul class="features-list">
+                <li><i class="fas fa-rocket"></i><span>Fast & Efficient Support</span></li>
+                <li><i class="fas fa-user-shield"></i><span>Dedicated Expert Team</span></li>
+                <li><i class="fas fa-stream"></i><span>Streamlined Ticket Management</span></li>
+            </ul>
+        </div>
+    </div>
+
+    {# Registration Form Section (Right or Bottom on Mobile) #}
+    <div class="registration-form-area">
+        <h2>Create Your SolvIT Account</h2>
+        <form method="post" id="registrationForm" novalidate>
+            {% csrf_token %}
+
+            {# Username Field #}
+       <!-- ... existing username field ... -->
+
+<div class="form-field-group">
+    <label for="{{ form.first_name.id_for_label }}">
+        <i class="fas fa-user-tag form-icon"></i> {{ form.first_name.label }}
+    </label>
+    {{ form.first_name }}
+    {% if form.first_name.errors %}
+        <small class="error-message">{{ form.first_name.errors|first }}</small>
+    {% endif %}
+    {% if form.first_name.help_text %}
+        <small class="help-text">{{ form.first_name.help_text|safe }}</small>
+    {% endif %}
+</div>
+
+<div class="form-field-group">
+    <label for="{{ form.last_name.id_for_label }}">
+        <i class="fas fa-user-tag form-icon"></i> {{ form.last_name.label }}
+    </label>
+    {{ form.last_name }}
+    {% if form.last_name.errors %}
+        <small class="error-message">{{ form.last_name.errors|first }}</small>
+    {% endif %}
+    {% if form.last_name.help_text %}
+        <small class="help-text">{{ form.last_name.help_text|safe }}</small>
+    {% endif %}
+</div>
+
+<div class="form-field-group">
+    <label for="{{ form.mobile.id_for_label }}">
+        <i class="fas fa-mobile-alt form-icon"></i> {{ form.mobile.label }} <span class="required">*</span>
+    </label>
+    {{ form.mobile }}
+    {% if form.mobile.errors %}
+        <small class="error-message">{{ form.mobile.errors|first }}</small>
+    {% endif %}
+    {% if form.mobile.help_text %}
+        <small class="help-text">{{ form.mobile.help_text|safe }}</small>
+    {% endif %}
+</div>
+
+<div class="form-field-group">
+    <label for="{{ form.email.id_for_label }}">
+        <i class="fas fa-envelope form-icon"></i> {{ form.email.label }} (Optional)
+    </label>
+    {{ form.email }}
+    {% if form.email.errors %}
+        <small class="error-message">{{ form.email.errors|first }}</small>
+    {% endif %}
+    {% if form.email.help_text %}
+        <small class="help-text">{{ form.email.help_text|safe }}</small>
+    {% endif %}
+</div>
+
+            {# Password Field #}
+            <div class="form-field-group">
+                <label for="{{ form.password1.id_for_label }}"><i class="fas fa-lock form-icon"></i> Password</label>
+                <div class="password-wrapper">
+                    {{ form.password1 }} {# Django renders the input widget #}
+                    <i class="fas fa-eye-slash toggle-password" data-target="{{ form.password1.id_for_label }}" title="Show/Hide password"></i>
+                </div>
+                <div id="passwordStrength" class="password-strength-meter">
+                    <div class="strength-bar-container"><div class="strength-bar"></div></div>
+                    <small class="strength-text"></small>
+                </div>
+                <small class="error-message">{{ form.password1.errors|first }}</small>
+            </div>
+
+            {# Confirm Password Field #}
+            <div class="form-field-group">
+                <label for="{{ form.password2.id_for_label }}"><i class="fas fa-lock form-icon"></i> Confirm Password</label>
+                <div class="password-wrapper">
+                    {{ form.password2 }} {# Django renders the input widget #}
+                    <i class="fas fa-eye-slash toggle-password" data-target="{{ form.password2.id_for_label }}" title="Show/Hide password"></i>
+                </div>
+                <small class="error-message" id="confirmPasswordError">{{ form.password2.errors|first }}</small>
+            </div>
+
+            {# Display Non-Field Errors (e.g., general form validation issues) #}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger-themed">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {# Submit Button #}
+            <button type="submit" class="btn-register" id="registerButton">
+                <span class="button-text">Create Account</span>
+                <span class="button-loader" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+        </form>
+        <p class="login-link">Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {# JavaScript for password toggle, strength meter, and form enhancements #}
+    <script src="{% static 'js/registration_enhancements.js' %}"></script>
+    {# Uncomment the line below if you implement the advanced JS dynamic background for the whole page #}
+    {# <script src="{% static 'js/dynamic_background.js' %}"></script> #}
+{% endblock %}

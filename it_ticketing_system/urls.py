@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views # Django's built-in auth views
 from tickets.views import home # Import your home view
 
+app_name = 'tickets'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),

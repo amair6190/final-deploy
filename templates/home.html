@@ -1,30 +1,218 @@
-{% extends "base.html" %}
-{% load auth_extras %} {# Load our custom tag #}
+{% comment %} {% extends "base.html" %} {% endcomment %} {# Temporarily comment out extends #}
+{% load static %}
+{% load auth_extras %}
 
-{% block title %}Welcome - IT Ticketing System{% endblock %}
+{% block extra_head %}
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {# Option 1: Reuse registration theme if styles are similar enough #}
+    <link rel="stylesheet" href="{% static 'css/registration_solvit_theme.css' %}">
+    {# Option 2: Create a new CSS file specifically for home page styles #}
+    <link rel="stylesheet" href="{% static 'css/home_page_theme.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="px-4 py-5 my-5 text-center">
-    <h1 class="display-5 fw-bold">IT Ticketing System</h1>
-    <div class="col-lg-6 mx-auto">
-        <p class="lead mb-4">Welcome to our support portal. Please log in to access your tickets or create a new one. If you are an agent, log in to manage support requests.</p>
-        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-            {% if user.is_authenticated %}
-                <p>You are logged in as {{ user.username }}.</p>
-                {% if user|is_in_group:"Customers" %}
-                    <a href="{% url 'customer_dashboard' %}" class="btn btn-primary btn-lg px-4 gap-3">My Dashboard</a>
-                {% elif user|is_in_group:"Agents" or user|is_in_group:"Admins" or user.is_superuser %}
-                    <a href="{% url 'agent_dashboard' %}" class="btn btn-info btn-lg px-4">Agent Dashboard</a>
-                {% endif %}
-                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-secondary btn-lg px-4">Logout</button>
-                </form>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
-                <a href="{% url 'register_customer' %}" class="btn btn-outline-secondary btn-lg px-4">Register</a>
-            {% endif %}
+<div class="home-page-container solv-it-theme">
+
+    {# --- Hero Section --- #}
+    <section class="hero-section text-center">
+        <div class="hero-background-elements">
+             <i class="fas fa-cogs animated-hero-icon icon-cogs"></i>
+             <i class="fas fa-server animated-hero-icon icon-server"></i>
+             <i class="fas fa-shield-alt animated-hero-icon icon-shield"></i>
         </div>
-    </div>
+        <div class="hero-content">
+            <img src="{% static 'images/your_solvit_logo.png' %}" alt="SolvIT Logo" class="hero-logo">
+            <h1 class="hero-headline">IT PROBLEMS? WE <span class="hero-solveit-text">SolvIT</span>.</h1>
+            <p class="hero-subheadline">Your dedicated partner for fast, reliable, and expert IT support services. <br>Log in or create an account to get started.</p>
+            <div class="hero-cta-buttons">
+                {% if user.is_authenticated %}
+                    {% if request.user|is_in_group:"Customers" %}
+                        <a href="{% url 'tickets:customer_dashboard' %}" class="btn btn-primary-themed btn-lg">My Dashboard</a>
+                    {% elif request.user|is_in_group:"Agents" or request.user|is_in_group:"Admins" %}
+                         <a href="{% url 'tickets:agent_dashboard' %}" class="btn btn-primary-themed btn-lg">Agent Dashboard</a>
+                    {% else %}
+                        {# Fallback if user has no group, or just a generic link #}
+                        <a href="#" class="btn btn-primary-themed btn-lg">View Account</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'tickets:login' %}" class="btn btn-primary-themed btn-lg">Login</a>
+                    <a href="{% url 'tickets:register_customer' %}" class="btn btn-secondary-themed btn-lg">Create Account</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {# --- About Us Section --- #}
+    <section id="about-us" class="home-section about-us-section">
+        <div class="container-fluid">
+            <h2 class="section-title">About SolvIT</h2>
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <img src="{% static 'images/about_us_it_team.jpg' %}" alt="SolvIT Team" class="img-fluid rounded section-image">
+                    {# Replace with an actual image representing your team or IT services #}
+                </div>
+                <div class="col-md-6">
+                    <p class="lead-text">At SolvIT, we're passionate about technology and dedicated to providing top-tier IT support and solutions for businesses and individuals.</p>
+                    <p>Our mission is to simplify complex IT challenges, offering prompt, reliable, and expert assistance to ensure your systems run smoothly and efficiently. With a team of experienced professionals, we tackle everything from everyday troubleshooting to strategic IT consulting.</p>
+                    <p>We believe in proactive support, transparent communication, and building long-lasting partnerships with our clients. Your success is our priority.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# --- FAQ Section --- #}
+    <section id="faq" class="home-section faq-section">
+        <div class="container-fluid">
+            <h2 class="section-title">Frequently Asked Questions (IT Support)</h2>
+            <div class="accordion" id="faqAccordion">
+                {# FAQ Item 1 #}
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                            <i class="fas fa-question-circle faq-icon"></i> What should I do if my computer is running slow?
+                        </button>
+                    </h3>
+                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            There are several reasons your computer might be slow. Try these steps first:
+                            <ul>
+                                <li><strong>Restart your computer:</strong> This can often resolve minor issues.</li>
+                                <li><strong>Check for malware:</strong> Run a full scan with your antivirus software.</li>
+                                <li><strong>Close unused applications:</strong> Too many open programs can consume resources.</li>
+                                <li><strong>Check disk space:</strong> Ensure you have at least 15-20% free disk space on your main drive.</li>
+                                <li><strong>Update software:</strong> Keep your operating system and applications updated.</li>
+                                If problems persist, please <a href="#contact-us">contact us</a> or submit a ticket.
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {# FAQ Item 2 #}
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            <i class="fas fa-wifi faq-icon"></i> I can't connect to the Wi-Fi. What are some troubleshooting steps?
+                        </button>
+                    </h3>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Wi-Fi issues can be frustrating. Try these:
+                            <ul>
+                                <li><strong>Check if other devices can connect:</strong> This helps determine if the issue is with your device or the network.</li>
+                                <li><strong>Restart your modem and router:</strong> Unplug them for 30 seconds, then plug the modem back in first, wait for it to connect, then plug in the router.</li>
+                                <li><strong>Restart your device.</strong></li>
+                                <li><strong>Check your Wi-Fi password:</strong> Ensure you're entering it correctly (case-sensitive).</li>
+                                <li><strong>Move closer to the router:</strong> Weak signals can cause connection drops.</li>
+                                <li><strong>Forget the network and reconnect:</strong> On your device, remove the Wi-Fi network and then add it again.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {# FAQ Item 3 #}
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                             <i class="fas fa-envelope faq-icon"></i> Why am I not receiving emails?
+                        </button>
+                    </h3>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Several factors could be at play:
+                            <ul>
+                                <li><strong>Check your internet connection.</strong></li>
+                                <li><strong>Look in your Spam/Junk folder:</strong> Emails can sometimes be misdirected.</li>
+                                <li><strong>Verify your email account settings:</strong> Especially if using an email client like Outlook or Thunderbird (server names, ports, authentication).</li>
+                                <li><strong>Check if your mailbox is full:</strong> Some services have storage limits.</li>
+                                <li><strong>Ensure your email subscription or service is active.</strong></li>
+                                For persistent issues, provide us with details about your email provider and how you access your email.
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                 {# FAQ Item 4 #}
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="headingFour">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                             <i class="fas fa-shield-alt faq-icon"></i> How can I protect my computer from viruses and malware?
+                        </button>
+                    </h3>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Protecting your computer is crucial:
+                            <ul>
+                                <li><strong>Install reputable antivirus software:</strong> Keep it updated and run regular scans. Windows Defender (built-in) is a good starting point.</li>
+                                <li><strong>Keep your operating system and software updated:</strong> Updates often include security patches.</li>
+                                <li><strong>Be cautious with email attachments and links:</strong> Don't open attachments or click links from unknown or suspicious senders.</li>
+                                <li><strong>Use strong, unique passwords:</strong> Consider a password manager.</li>
+                                <li><strong>Enable a firewall:</strong> Most operating systems have a built-in firewall.</li>
+                                <li><strong>Avoid downloading from untrusted sources.</strong></li>
+                                <li><strong>Back up your important data regularly.</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {# Add more FAQ items here #}
+            </div>
+        </div>
+    </section>
+
+    {# --- Contact Us Section --- #}
+    <section id="contact-us" class="home-section contact-us-section">
+        <div class="container-fluid">
+            <h2 class="section-title">Get In Touch</h2>
+            <p class="text-center section-subtitle">Have a question or need direct assistance? We're here to help!</p>
+            <div class="row">
+                <div class="col-lg-6 contact-info">
+                    <h3>Contact Information</h3>
+                    <p><i class="fas fa-map-marker-alt contact-icon"></i> 123 Tech Avenue, Silicon City, TX 75001</p>
+                    <p><i class="fas fa-phone contact-icon"></i> (555) 123-SOLV (7658)</p>
+                    <p><i class="fas fa-envelope contact-icon"></i> support@solvit.example.com</p>
+                    <p><i class="fas fa-headset contact-icon"></i> For urgent issues, please log in and submit a high-priority ticket.</p>
+                    <div class="social-icons">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h3>Send Us a Message</h3>
+                    {# This form would typically submit to a Django view that handles it (e.g., sends an email or creates a lead) #}
+                    {# For now, it's a placeholder structure #}
+                    <form action="#" method="POST" class="contact-form">
+                        {% csrf_token %} {# If it were a real Django form #}
+                        <div class="mb-3">
+                            <label for="contactName" class="form-label">Your Name</label>
+                            <input type="text" class="form-control-themed" id="contactName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactEmail" class="form-label">Your Email</label>
+                            <input type="email" class="form-control-themed" id="contactEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactSubject" class="form-label">Subject</label>
+                            <input type="text" class="form-control-themed" id="contactSubject" name="subject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactMessage" class="form-label">Message</label>
+                            <textarea class="form-control-themed" id="contactMessage" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary-themed btn-block">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="solvit-footer text-center">
+        <p>© {% now "Y" %} SolvIT. All Rights Reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+    </footer>
+
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {# Bootstrap JS Bundle (needed for Accordion) - ensure this is loaded in base.html or base_minimal.html if extending that #}
+    {# <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> #}
+    {# Your custom JS if needed for home page animations or interactions #}
+    {# <script src="{% static 'js/home_page_animations.js' %}"></script> #}
 {% endblock %}

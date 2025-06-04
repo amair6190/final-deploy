@@ -15,7 +15,7 @@
                 {% for ticket in unassigned_tickets %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <a href="{% url 'ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
+                            <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
                             <small class="d-block text-muted">
                                 Customer: {{ ticket.customer.username }} | Priority: {{ ticket.get_priority_display }}
                             </small>
@@ -37,7 +37,7 @@
                 {% for ticket in assigned_tickets %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <a href="{% url 'ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
+                            <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
                             <small class="d-block text-muted">
                                 Customer: {{ ticket.customer.username }} | Priority: {{ ticket.get_priority_display }}
                             </small>
@@ -61,7 +61,7 @@
         {% for ticket in resolved_tickets %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                    <a href="{% url 'ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
+                    <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
                     <small class="d-block text-muted">
                         Resolved by: {{ ticket.agent.username|default:"N/A" }} on {{ ticket.updated_at|date:"Y-m-d" }}
                     </small>
