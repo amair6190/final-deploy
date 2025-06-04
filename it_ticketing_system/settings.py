@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from django.urls import reverse_lazy
 
+# it_ticketing_system/settings.py
+AUTH_USER_MODEL = 'tickets.CustomUser' # app_name.ModelName
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,6 +21,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+AUTHENTICATION_BACKENDS = [
+    'tickets.backends.MobileOrEmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Application definition
 
@@ -75,7 +82,7 @@ DATABASES = {
         'NAME': 'it_ticketing_db',
         'USER': 'amair',
         'PASSWORD': 'Psql@solvit@2025',
-        'HOST': 'localhost',
+        'HOST': '10.0.0.6',
         'PORT': '5432',
     }
 }

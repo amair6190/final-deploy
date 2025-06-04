@@ -2,17 +2,17 @@
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-#from django.contrib.auth.forms import UserCreationForm # Using this for registration
 from django.contrib.auth.models import Group
-from django.contrib import messages as django_messages # to avoid conflict with model name
-from django.contrib.auth import login # <<---- IMPORT THIS FOR AUTO LOGIN
+from django.contrib import messages as django_messages
+from django.contrib.auth import login
 from django.db.models import Q 
 from django.contrib.auth.views import LoginView as DjangoLoginView 
 from django.conf import settings
 from django.urls import reverse_lazy
+import traceback # Import for detailed tracebacks
 
-from .models import Ticket, Message
-from .forms import ( # Group your form imports
+from .models import Ticket, Message # Assuming CustomUser is imported via settings.AUTH_USER_MODEL
+from .forms import (
     CustomLoginForm, 
     TicketCreationForm, 
     MessageCreationForm, 
@@ -22,20 +22,52 @@ from .forms import ( # Group your form imports
 
 def register_customer(request):
     if request.method == 'POST':
-        form = CustomerRegistrationForm(request.POST) # <<--- USE YOUR CUSTOM FORM
+        form = CustomerRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save() 
+            # print("Form is valid. Attempting to save user...") # Debug print
             try:
-                customer_group = Group.objects.get(name='Customers')
-                user.groups.add(customer_group)
-            except Group.DoesNotExist:
-                django_messages.error(request, "Critical setup error: 'Customers' group not found. Please contact an administrator.")
+                user = form.save() # This calls CustomUser.objects.create_user(...)
+                print(f"User {user.username} saved with ID {user.id}. Attempting to add to group...") # Debug print
+                
+                try:
+                    customer_group = Group.objects.get(name='Customers')
+                    user.groups.add(customer_group)
+                    # print(f"User {user.username} added to 'Customers' group.") # Debug print
+                except Group.DoesNotExist:
+                    error_msg = "Critical setup error: 'Customers' group not found. Account created but role not assigned."
+                    django_messages.error(request, error_msg)
+                    print(f"ERROR: {error_msg} for user {user.username}") # Log for admin
+                
+                # print(f"Attempting to login user {user.username}...") # Debug print
+                login(request, user)
+                django_messages.success(request, f'Welcome, {user.username}! Your account has been created and you are now logged in.')
+                return redirect('tickets:customer_dashboard')
             
-            login(request, user)
-            django_messages.success(request, f'Welcome, {user.username}! Your account has been created and you are now logged in.')
-            return redirect('tickets:customer_dashboard')
-    else:
-        form = CustomerRegistrationForm() # <<--- USE YOUR CUSTOM FORM
+            except Exception as e:
+                # This will catch errors during form.save() or subsequent operations before redirect
+                error_message = f"An unexpected error occurred during registration: {e}"
+                django_messages.error(request, error_message)
+                print(f"--- REGISTRATION EXCEPTION ---")
+                print(error_message)
+                traceback.print_exc() # Print full traceback to console
+                print(f"----------------------------")
+                # Re-render the form. The form instance `form` will still contain
+                # the submitted data and any validation errors if is_valid() was True
+                # but save() failed. If is_valid() was false, this part isn't reached.
+                # If save() itself failed due to model validation not caught by form validation,
+                # the form might not show those errors directly without custom handling.
+                
+        else: # form.is_valid() is False
+            django_messages.error(request, "Registration failed. Please correct the errors highlighted below.")
+            print("--- REGISTRATION FORM ERRORS ---")
+            for field, errors in form.errors.items():
+                print(f"Field: {field}, Errors: {', '.join(errors)}")
+            if form.non_field_errors():
+                print(f"Non-field errors: {', '.join(form.non_field_errors())}")
+            print(f"------------------------------")
+    else: # GET request
+        form = CustomerRegistrationForm()
+    
     return render(request, 'tickets/register_customer.html', {'form': form})
 
 # --- Helper function for checking group ---
