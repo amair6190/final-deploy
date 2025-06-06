@@ -1,19 +1,52 @@
 {% extends "base.html" %}
-{% block title %}My Tickets{% endblock %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/dashboard_solvit_theme.css' %}">
+{% endblock %}
+
+{% block body_class %}solv-it-dashboard-theme{% endblock %}
+
+{% block title %}Customer Dashboard{% endblock %}
 
 {% block content %}
-<h2>My Tickets</h2>
+<header class="dashboard-header">
+    <h2 class="dashboard-title">My Tickets</h2>
+    <a href="{% url 'tickets:create_ticket' %}" class="btn create-ticket-btn">Create New Ticket</a>
+</header>
+
 {% if tickets %}
-    <ul class="list-group">
+    <ul class="ticket-grid">
         {% for ticket in tickets %}
-            <li class="list-group-item">
-                <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
-                <span class="badge bg-secondary">{{ ticket.get_status_display }}</span>
-                <small class="text-muted">Created: {{ ticket.created_at|date:"Y-m-d H:i" }}</small>
+            <li class="ticket-card">
+                <div class="ticket-card-content">
+                    <div class="ticket-card-header">
+                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-title-link">
+                           #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
+                        </a>
+                        <span class="ticket-status status-{{ ticket.status }}">
+                            {{ ticket.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="ticket-card-body">
+                        <p>
+                            {{ ticket.description|truncatewords:20|linebreaksbr }}
+                        </p>
+                    </div>
+                    <div class="ticket-card-footer">
+                        <span>Created: {{ ticket.created_at|date:"M d, Y, g:i A" }}</span>
+                        {% if ticket.agent %}
+                            | <span>Agent: {{ ticket.agent.get_full_name|default:ticket.agent.username }}</span>
+                        {% endif %}
+                    </div>
+                </div>
             </li>
         {% endfor %}
     </ul>
 {% else %}
-    <p>You have not created any tickets yet. <a href="{% url 'tickets:create_ticket' %}">Create one now!</a></p>
+    <div class="empty-dashboard">
+        <p>You have no tickets yet. Ready to start?</p>
+        <a href="{% url 'tickets:create_ticket' %}" class="btn create-ticket-btn">Create Your First Ticket</a>
+    </div>
 {% endif %}
 {% endblock %}

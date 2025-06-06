@@ -112,42 +112,37 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
 USE_TZ = True
 
+# Add custom datetime format settings
+DATETIME_FORMAT = 'Y-m-d g:i A'  # 12-hour format with AM/PM
+DATE_FORMAT = 'Y-m-d'
+TIME_FORMAT = 'g:i A'  # 12-hour format with AM/PM
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-LOGIN_URL = 'tickets:login'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
+# Login and Authentication Settings
+LOGIN_URL = 'tickets:login'
+LOGIN_REDIRECT_URL = 'tickets:customer_dashboard'  # For customers
+LOGOUT_REDIRECT_URL = reverse_lazy('home')
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'tickets:agent_dashboard' # Correct setting for agents
-LOGIN_REDIRECT_URL = 'tickets:customer_dashboard' # Or simply '/' if you prefer
-LOGOUT_REDIRECT_URL = reverse_lazy('home') # Good to set this too
+# Crispy Forms Settings
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" # Or "bootstrap4" if you used that
-CRISPY_TEMPLATE_PACK = "bootstrap5" 
-
-# Default session age (e.g., expires when browser closes or after a shorter period)
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 1  # 1 day (default is 2 weeks, adjust as needed for non-remembered sessions)
-# Set SESSION_EXPIRE_AT_BROWSER_CLOSE to False if you want SESSION_COOKIE_AGE to be the primary determinant
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False # Set to True if you want sessions to clear on browser close by default
-
-# "Remember Me" session age (e.g., 30 days)
-SESSION_COOKIE_AGE_REMEMBER_ME = 60 * 60 * 24 * 30  # 30 days in seconds
+# Session Settings
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 1  # 1 day
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE_REMEMBER_ME = 60 * 60 * 24 * 30  # 30 days

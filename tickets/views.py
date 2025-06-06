@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.contrib.auth.views import LoginView as DjangoLoginView 
 from django.conf import settings
 from django.urls import reverse_lazy
+from django.http import JsonResponse
 import traceback # Import for detailed tracebacks
 
 from .models import Ticket, Message # Assuming CustomUser is imported via settings.AUTH_USER_MODEL
@@ -145,9 +146,24 @@ def ticket_detail(request, ticket_id):
             message.ticket = ticket
             message.sender = request.user
             message.save()
-            ticket.save()
+            ticket.save()  # Update the ticket's updated_at timestamp
+            
+            # If this is an AJAX request, return JSON response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Message posted successfully!'
+                })
+            
             django_messages.success(request, 'Message posted successfully!')
             return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+        else:
+            # If this is an AJAX request, return error response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'errors': message_form.errors
+                })
     else:
         message_form = MessageCreationForm()
 

@@ -17,7 +17,7 @@
                         <div>
                             <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
                             <small class="d-block text-muted">
-                                Customer: {{ ticket.customer.username }} | Priority: {{ ticket.get_priority_display }}
+                                Customer: {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %} | Priority: {{ ticket.get_priority_display }}
                             </small>
                         </div>
                         <span class="badge bg-info rounded-pill">{{ ticket.get_status_display }}</span>
@@ -39,7 +39,7 @@
                         <div>
                             <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
                             <small class="d-block text-muted">
-                                Customer: {{ ticket.customer.username }} | Priority: {{ ticket.get_priority_display }}
+                                Customer: {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %} | Priority: {{ ticket.get_priority_display }}
                             </small>
                         </div>
                         <span class="badge bg-success rounded-pill">{{ ticket.get_status_display }}</span>
@@ -63,7 +63,7 @@
                 <div>
                     <a href="{% url 'tickets:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a>
                     <small class="d-block text-muted">
-                        Resolved by: {{ ticket.agent.username|default:"N/A" }} on {{ ticket.updated_at|date:"Y-m-d" }}
+                        Resolved by: {% if ticket.agent %}{% if ticket.agent.get_full_name %}{{ ticket.agent.get_full_name }}{% else %}{{ ticket.agent.username }}{% endif %}{% else %}N/A{% endif %} on {{ ticket.updated_at|date:"Y-m-d g:i A" }}
                     </small>
                 </div>
                 <span class="badge bg-secondary rounded-pill">{{ ticket.get_status_display }}</span>

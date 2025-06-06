@@ -7,12 +7,12 @@
         <h3>#{{ ticket.id }} - {{ ticket.title }}</h3>
     </div>
     <div class="card-body">
-        <p><strong>Customer:</strong> {{ ticket.customer.username }}</p>
+        <p><strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}</p>
         <p><strong>Status:</strong> {{ ticket.get_status_display }}</p>
         <p><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
-        <p><strong>Agent:</strong> {{ ticket.agent.username|default:"Unassigned" }}</p>
-        <p><strong>Created:</strong> {{ ticket.created_at|date:"Y-m-d H:i:s" }}</p>
-        <p><strong>Last Updated:</strong> {{ ticket.updated_at|date:"Y-m-d H:i:s" }}</p>
+        <p><strong>Agent:</strong> {% if ticket.agent %}{% if ticket.agent.get_full_name %}{{ ticket.agent.get_full_name }}{% else %}{{ ticket.agent.username }}{% endif %}{% else %}Unassigned{% endif %}</p>
+        <p><strong>Created:</strong> {{ ticket.created_at|date:"Y-m-d g:i A" }}</p>
+        <p><strong>Last Updated:</strong> {{ ticket.updated_at|date:"Y-m-d g:i A" }}</p>
         <hr>
         <p><strong>Description:</strong></p>
         <p>{{ ticket.description|linebreaksbr }}</p>
@@ -41,12 +41,12 @@
 
 <h4>Messages</h4>
 <div class="messages-list mb-3" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-    {% for message in messages %}
+    {% for message in messages_list %}
         <div class="card mb-2 {% if message.sender == request.user %}bg-light{% endif %}">
             <div class="card-body">
                 <p class="card-text">{{ message.content|linebreaksbr }}</p>
                 <footer class="blockquote-footer">
-                    {{ message.sender.username }} on {{ message.timestamp|date:"Y-m-d H:i" }}
+                    {% if message.sender.get_full_name %}{{ message.sender.get_full_name }}{% else %}{{ message.sender.username }}{% endif %} on {{ message.timestamp|date:"Y-m-d g:i A" }}
                 </footer>
             </div>
         </div>
@@ -59,7 +59,7 @@
     <div class="card">
         <div class="card-header">Post a Reply</div>
         <div class="card-body">
-            <form method="post"> {# Action defaults to current URL for message posting #}
+            <form method="post" id="message-form">
                 {% csrf_token %}
                 {{ message_form.as_p }}
                 <button type="submit" class="btn btn-primary">Post Message</button>
@@ -77,4 +77,45 @@
     <a href="{% url 'tickets:agent_dashboard' %}" class="btn btn-secondary">Back to Agent Dashboard</a>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageForm = document.getElementById('message-form');
+    const messagesList = document.querySelector('.messages-list');
+
+    if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: new FormData(messageForm),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear the form
+                    messageForm.reset();
+                    
+                    // Refresh the messages list
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+
+    // Scroll messages list to bottom
+    if (messagesList) {
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+});
+</script>
 {% endblock %}

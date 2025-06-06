@@ -95,7 +95,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['username', 'email']
 
     def __str__(self):
-        return self.mobile # Or f"{self.first_name} {self.last_name} ({self.mobile})"
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.username != self.mobile:  # If username is different from mobile
+            return self.username
+        return self.mobile  # Fallback to mobile if no other identifiers are available
+
+    def get_full_name(self):
+        """Return the first_name plus the last_name, with a space in between."""
+        full_name = f"{self.first_name} {self.last_name}"
+        return full_name.strip()
+
+    def get_short_name(self):
+        """Return the short name for the user."""
+        return self.first_name
 
     groups = models.ManyToManyField(
         'auth.Group',

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm # Ensure AuthenticationForm is also imported
 from django.core.exceptions import ValidationError # Import ValidationError
 from .models import Ticket, Message
+from django.contrib.auth.models import Group
 
 CustomUser = get_user_model()
 
@@ -68,20 +69,20 @@ class CustomerRegistrationForm(UserCreationForm):
     )
 
     first_name = forms.CharField(
-        required=False,
+        required=True,
         label='First Name',
         widget=forms.TextInput(attrs={
             'class': 'form-control-themed',
-            'placeholder': 'First Name (Optional)'
+            'placeholder': 'First Name'
         })
     )
 
     last_name = forms.CharField(
-        required=False,
+        required=True,
         label='Last Name',
         widget=forms.TextInput(attrs={
             'class': 'form-control-themed',
-            'placeholder': 'Last Name (Optional)'
+            'placeholder': 'Last Name'
         })
     )
 
@@ -166,7 +167,18 @@ class MessageCreationForm(forms.ModelForm):  # ... as before ...
             'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Type your message...'})
         }
 
-class TicketUpdateForm(forms.ModelForm):  # ... as before ...
+class TicketUpdateForm(forms.ModelForm):
     class Meta:
         model = Ticket
-        fields = ['status', 'priority']
+        fields = ['status', 'priority', 'agent']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter agent choices to only show users in the Agents group
+        agents_group = Group.objects.get(name='Agents')
+        self.fields['agent'].queryset = CustomUser.objects.filter(groups=agents_group)
+        self.fields['agent'].label = "Assign to Agent"
+        
+        # Add Bootstrap classes
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})

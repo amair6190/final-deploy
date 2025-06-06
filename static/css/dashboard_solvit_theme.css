@@ -1,0 +1,201 @@
+/* static/css/dashboard_solvit_theme.css */
+
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap');
+
+/* Using the established SolvIT color palette and base styles */
+:root {
+    --solvit-blue: #0d6efd;
+    --solvit-blue-dark: #0a58ca;
+    --solvit-blue-light: #3d8bfd;
+    --solvit-black-bg: #121212;
+    --solvit-bg-dark: #121212;
+    --solvit-card-bg: #1e1e1e; /* A slightly lighter dark for cards */
+    --solvit-text-primary: #e0e0e0;
+    --solvit-text-secondary: #b0b0b0;
+    --solvit-border-color: #333; /* A bit lighter for better visibility */
+    --solvit-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    --solvit-glow-hover: 0 0 15px rgba(13, 110, 253, 0.4);
+    --status-open: #3d8bfd;       /* SolvIT blue-light - matches brand */
+    --status-progress: #00c9a7;   /* Teal - fresh and active */
+    --status-resolved: #20c997;   /* Green - success but matches theme */
+    --status-closed: #495057;     /* Darker grey - more cohesive with dark theme */
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --border-radius: 8px;
+    --transition-speed: 0.3s;
+}
+
+/* Apply the animated grid background to the body */
+body.solv-it-dashboard-theme {
+    background-color: var(--solvit-black-bg);
+    font-family: 'Open Sans', sans-serif;
+    color: var(--solvit-text-primary);
+    position: relative; 
+    z-index: 0;
+    overflow-x: hidden;
+}
+
+/* Animated Grid Background - matching the registration page */
+body.solv-it-dashboard-theme::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1; 
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: animatedBackgroundGrid 180s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes animatedBackgroundGrid {
+    from { background-position: 0 0; }
+    to { background-position: -1500px -1500px; }
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--solvit-border-color);
+}
+
+.dashboard-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+}
+
+.create-ticket-btn {
+    background: linear-gradient(135deg, var(--solvit-blue), var(--solvit-blue-light));
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) ease;
+    box-shadow: var(--solvit-shadow);
+    border: none;
+}
+
+.create-ticket-btn:hover, .create-ticket-btn:focus {
+    transform: translateY(-2px);
+    box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+    color: white;
+}
+
+/* Ticket Grid Layout */
+.ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    padding: 0;
+    list-style: none;
+}
+
+.ticket-card {
+    background-color: var(--solvit-card-bg);
+    border: 1px solid var(--solvit-border-color);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) ease;
+    box-shadow: var(--solvit-shadow);
+    overflow: hidden; /* Ensures border-top radius is clean */
+    display: flex;
+    flex-direction: column;
+}
+
+.ticket-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--solvit-blue-light);
+    box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+}
+
+.ticket-card-content {
+    padding: var(--spacing-md);
+    flex-grow: 1;
+}
+
+.ticket-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.ticket-title-link {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--solvit-text-primary);
+    text-decoration: none;
+    line-height: 1.3;
+}
+.ticket-title-link:hover {
+    color: var(--solvit-blue-light);
+}
+
+.ticket-card-body {
+    font-size: 0.95rem;
+    color: var(--solvit-text-secondary);
+    padding-bottom: var(--spacing-md);
+}
+
+.ticket-card-footer {
+    margin-top: auto; /* Pushes footer to the bottom */
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--solvit-border-color);
+    font-size: 0.85rem;
+    color: var(--solvit-text-secondary);
+}
+
+/* Status Badges */
+.ticket-status {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    color: white;
+    white-space: nowrap;
+    margin-left: var(--spacing-md);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-OPEN { 
+    background-color: var(--status-open);
+    border-color: rgba(61, 139, 253, 0.3);
+}
+.status-IN_PROGRESS { 
+    background-color: var(--status-progress);
+    border-color: rgba(0, 201, 167, 0.3);
+}
+.status-RESOLVED { 
+    background-color: var(--status-resolved);
+    border-color: rgba(32, 201, 151, 0.3);
+}
+.status-CLOSED { 
+    background-color: var(--status-closed);
+    border-color: rgba(73, 80, 87, 0.3);
+}
+
+/* Empty Message */
+.empty-dashboard {
+    text-align: center;
+    padding: 50px;
+    background-color: var(--solvit-card-bg);
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--solvit-border-color);
+}
+.empty-dashboard p {
+    font-size: 1.2rem;
+    color: var(--solvit-text-secondary);
+    margin-bottom: var(--spacing-lg);
+} 

@@ -2,14 +2,20 @@
 {% load static %}
 {% load auth_extras %}
 
-{% block extra_head %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolvIT - Your IT Support Partner</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     {# Option 1: Reuse registration theme if styles are similar enough #}
     <link rel="stylesheet" href="{% static 'css/registration_solvit_theme.css' %}">
     {# Option 2: Create a new CSS file specifically for home page styles #}
     <link rel="stylesheet" href="{% static 'css/home_page_theme.css' %}">
-{% endblock %}
+</head>
+<body class="solv-it-theme-active">
 
 {% block content %}
 <div class="home-page-container solv-it-theme">
@@ -211,8 +217,10 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    {# Bootstrap JS Bundle (needed for Accordion) - ensure this is loaded in base.html or base_minimal.html if extending that #}
-    {# <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> #}
+    {# Bootstrap JS Bundle (needed for Accordion) #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {# Your custom JS if needed for home page animations or interactions #}
     {# <script src="{% static 'js/home_page_animations.js' %}"></script> #}
 {% endblock %}
+</body>
+</html>

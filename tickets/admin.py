@@ -2,11 +2,25 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth import get_user_model # Use this to get the active user model
+from django.contrib.auth.models import Group
+from django.forms import ModelForm
+from django import forms
 
 # Import your other app models
 from .models import Ticket, Message
 
 CustomUser = get_user_model() # Get the CustomUser model
+
+class TicketAdminForm(ModelForm):
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter agent choices to only show users in the Agents group
+        agents_group = Group.objects.get(name='Agents')
+        self.fields['agent'].queryset = CustomUser.objects.filter(groups=agents_group)
 
 # --- Inline for Messages within Ticket Admin ---
 class MessageInline(admin.TabularInline): # Or StackedInline
@@ -22,21 +36,18 @@ class MessageInline(admin.TabularInline): # Or StackedInline
 # --- Ticket Admin ---
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
+    form = TicketAdminForm
     list_display = ('id', 'title', 'customer', 'agent', 'status', 'priority', 'created_at', 'updated_at')
-    list_filter = ('status', 'priority', 'agent', 'created_at')
-    search_fields = ('title', 'description', 'customer__username', 'agent__username', 'customer__mobile')
-    raw_id_fields = ('agent',)  # Only agent field should be a raw_id field
-    readonly_fields = ('customer', 'created_at', 'updated_at')  # Make customer read-only
-    date_hierarchy = 'created_at'
-
+    list_filter = ('status', 'priority', 'created_at')
+    search_fields = ('title', 'customer__username', 'customer__email', 'agent__username')
+    readonly_fields = ('created_at', 'updated_at')
     inlines = [MessageInline]
 
     def get_readonly_fields(self, request, obj=None):
-        # If this is a new ticket (obj is None), allow setting the customer
-        if obj is None:
-            return ('created_at', 'updated_at')
-        # For existing tickets, customer should be read-only for everyone, including superusers
-        return ('customer', 'created_at', 'updated_at')
+        # Make customer field readonly if ticket already exists
+        if obj:  # editing an existing object
+            return self.readonly_fields + ('customer',)
+        return self.readonly_fields
 
 # --- Message Admin ---
 @admin.register(Message)
