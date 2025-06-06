@@ -120,44 +120,49 @@ def ticket_detail(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
     is_customer = is_in_group(request.user, 'Customers')
     is_agent = is_in_group(request.user, 'Agents')
-    is_admin = is_in_group(request.user, 'Admins') # Good to check for admin too
+    is_admin = is_in_group(request.user, 'Admins')
 
     # Security Checks
     if is_customer and ticket.customer != request.user:
         django_messages.error(request, "You are not authorized to view this ticket.")
         return redirect('tickets:customer_dashboard')
     
-    # Agents/Admins can view any ticket (adjust if agents should only see assigned/departmental)
+    # Agents can only view tickets assigned to them (unless they're admins)
+    if is_agent and not is_admin and not request.user.is_superuser:
+        if ticket.agent != request.user:
+            django_messages.error(request, "You can only view tickets assigned to you.")
+            return redirect('tickets:agent_dashboard')
+    
+    # If not customer, agent, or admin, deny access
     if not (is_customer or is_agent or is_admin or request.user.is_superuser):
         django_messages.error(request, "You do not have permission to view this page.")
-        return redirect('home') # Or appropriate page
+        return redirect('home')
 
     if request.method == 'POST':
         message_form = MessageCreationForm(request.POST)
         if message_form.is_valid():
             message = message_form.save(commit=False)
             message.ticket = ticket
-            message.sender = request.user # 'sender' field in Message model
+            message.sender = request.user
             message.save()
-            ticket.save() # To update ticket's updated_at
+            ticket.save()
             django_messages.success(request, 'Message posted successfully!')
             return redirect('tickets:ticket_detail', ticket_id=ticket.id)
-        # else: handle invalid message_form if necessary
     else:
         message_form = MessageCreationForm()
 
-    messages_queryset = ticket.messages.all().order_by('timestamp') # Changed from 'messages' to 'messages_queryset'
+    messages_queryset = ticket.messages.all().order_by('timestamp')
     ticket_update_form = None
-    if is_agent or is_admin or request.user.is_superuser: 
+    if (is_agent and ticket.agent == request.user) or is_admin or request.user.is_superuser:
         ticket_update_form = TicketUpdateForm(instance=ticket)
 
     context = {
         'ticket': ticket,
-        'messages_list': messages_queryset, # Use a different name to avoid conflict if 'messages' is used by context processor
+        'messages_list': messages_queryset,
         'message_form': message_form,
         'ticket_update_form': ticket_update_form,
         'is_customer': is_customer,
-        'is_agent': is_agent or is_admin or request.user.is_superuser, # Allow admins to act as agents
+        'is_agent': is_agent or is_admin or request.user.is_superuser,
     }
     return render(request, 'tickets/ticket_detail.html', context)
 
@@ -194,26 +199,35 @@ def agent_dashboard(request):
 @login_required
 def assign_ticket_to_self(request, ticket_id):
     if not (is_in_group(request.user, 'Agents') or is_in_group(request.user, 'Admins') or request.user.is_superuser):
-        django_messages.error(request, "Access Denied.")
-        return redirect('home') # Or agent dashboard if they somehow got here without being an agent
+        django_messages.error(request, "Access Denied. Only agents can assign tickets.")
+        return redirect('tickets:agent_dashboard')
 
     ticket = get_object_or_404(Ticket, id=ticket_id)
-    if ticket.agent is None:
-        ticket.agent = request.user
-        ticket.status = 'IN_PROGRESS' 
-        ticket.save()
-        django_messages.success(request, f'Ticket #{ticket.id} assigned to you.')
-    else:
-        django_messages.warning(request, f'Ticket #{ticket.id} is already assigned to {ticket.agent.username}.')
+    
+    # Check if the ticket is already assigned
+    if ticket.agent is not None:
+        if ticket.agent == request.user:
+            django_messages.warning(request, f'Ticket #{ticket.id} is already assigned to you.')
+        else:
+            django_messages.warning(request, f'Ticket #{ticket.id} is already assigned to {ticket.agent.username}.')
+        return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+    
+    # Assign the ticket
+    ticket.agent = request.user
+    ticket.status = 'IN_PROGRESS'
+    ticket.save()
+    django_messages.success(request, f'Ticket #{ticket.id} has been assigned to you.')
     return redirect('tickets:ticket_detail', ticket_id=ticket.id)
 
 
 @login_required
 def update_ticket_by_agent(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
+    is_admin = is_in_group(request.user, 'Admins')
+    
     # Check if user is assigned agent, an Admin, or superuser
-    if not (request.user == ticket.agent or is_in_group(request.user, 'Admins') or request.user.is_superuser):
-        django_messages.error(request, "You do not have permission to update this ticket.")
+    if not (request.user == ticket.agent or is_admin or request.user.is_superuser):
+        django_messages.error(request, "You can only update tickets assigned to you.")
         return redirect('tickets:ticket_detail', ticket_id=ticket.id)
 
     if request.method == 'POST':
@@ -221,22 +235,11 @@ def update_ticket_by_agent(request, ticket_id):
         if form.is_valid():
             form.save()
             django_messages.success(request, f'Ticket #{ticket.id} status updated.')
-            # No need to redirect here, the form submission is usually via AJAX or from ticket_detail page itself.
-            # If this view is a standalone page for updating, then redirect.
-            # For now, assuming it's part of ticket_detail's POST handling.
-            return redirect('tickets:ticket_detail', ticket_id=ticket.id) 
+            return redirect('tickets:ticket_detail', ticket_id=ticket.id)
         else:
-            # If form is invalid, typically you re-render the page with the form and errors.
-            # This might mean ticket_detail needs to handle displaying ticket_update_form with errors.
-            # For simplicity in this example, we'll just show a generic message and redirect.
             django_messages.error(request, "Error updating ticket. Please check the form.")
-            # Storing form errors in messages to display on redirect is tricky.
-            # Better to re-render the page where the form was.
-            # This redirect might lose form error context.
             return redirect('tickets:ticket_detail', ticket_id=ticket.id)
 
-    # If GET, typically this view isn't directly accessed or it displays a form.
-    # Since update is usually a POST from ticket_detail, a GET here might be unusual.
     return redirect('tickets:ticket_detail', ticket_id=ticket.id)
 
 

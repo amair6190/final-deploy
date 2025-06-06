@@ -24,13 +24,19 @@ class MessageInline(admin.TabularInline): # Or StackedInline
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'customer', 'agent', 'status', 'priority', 'created_at', 'updated_at')
     list_filter = ('status', 'priority', 'agent', 'created_at')
-    search_fields = ('title', 'description', 'customer__username', 'agent__username', 'customer__mobile') # Added mobile
-    # To make assigning agents easier in admin:
-    raw_id_fields = ('customer', 'agent') # Provides a search popup for ForeignKey fields
-    readonly_fields = ('created_at', 'updated_at') # Usually good to make these read-only
-    date_hierarchy = 'created_at' # Adds date navigation
+    search_fields = ('title', 'description', 'customer__username', 'agent__username', 'customer__mobile')
+    raw_id_fields = ('agent',)  # Only agent field should be a raw_id field
+    readonly_fields = ('customer', 'created_at', 'updated_at')  # Make customer read-only
+    date_hierarchy = 'created_at'
 
-    inlines = [MessageInline] # Add messages inline
+    inlines = [MessageInline]
+
+    def get_readonly_fields(self, request, obj=None):
+        # If this is a new ticket (obj is None), allow setting the customer
+        if obj is None:
+            return ('created_at', 'updated_at')
+        # For existing tickets, customer should be read-only for everyone, including superusers
+        return ('customer', 'created_at', 'updated_at')
 
 # --- Message Admin ---
 @admin.register(Message)
