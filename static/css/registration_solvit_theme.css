@@ -35,38 +35,40 @@ html, body {
 }
 
 /* --- General Page Styles for Registration Page --- */
-/* This selector targets the body tag when it has BOTH classes */
 body.solvit-theme-active.registration-page-body {
     font-family: var(--font-secondary);
-    background-color: var(--solvit-black-bg); /* Main page dark background */
+    background-color: var(--solvit-black-bg);
     color: var(--solvit-text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 20px 0; /* Padding top/bottom for the whole page */
-    position: relative; /* For z-index stacking context of ::before */
-    z-index: 0;         /* Base stacking context */
+    padding: 20px 0;
+    position: relative;
+    z-index: 0;
     overflow-x: hidden;
 }
 
-/* Animated Grid Background for the Registration Page Body */
+/* Honeycomb Background Pattern */
 body.solvit-theme-active.registration-page-body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    z-index: -1; /* BEHIND the body's content and its own background-color */
-    background-image:
-        linear-gradient(var(--solvit-blue-transparent-1) 1px, transparent 1px),
-        linear-gradient(90deg, var(--solvit-blue-transparent-1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: animatedBackgroundGrid 180s linear infinite;
+    z-index: -1;
+    background-color: var(--solvit-black-bg);
+    background-image: 
+        linear-gradient(30deg, var(--solvit-blue-transparent-1) 12%, transparent 12.5%, transparent 87%, var(--solvit-blue-transparent-1) 87.5%, var(--solvit-blue-transparent-1)),
+        linear-gradient(150deg, var(--solvit-blue-transparent-1) 12%, transparent 12.5%, transparent 87%, var(--solvit-blue-transparent-1) 87.5%, var(--solvit-blue-transparent-1)),
+        linear-gradient(30deg, var(--solvit-blue-transparent-1) 12%, transparent 12.5%, transparent 87%, var(--solvit-blue-transparent-1) 87.5%, var(--solvit-blue-transparent-1));
+    background-size: 80px 140px;
+    background-position: 0 0, 0 0, 40px 70px;
+    animation: animatedBackgroundHoneycomb 180s linear infinite;
     pointer-events: none;
 }
 
-@keyframes animatedBackgroundGrid {
-    from { background-position: 0 0; }
-    to { background-position: -1500px -1500px; }
+@keyframes animatedBackgroundHoneycomb {
+    from { background-position: 0 0, 0 0, 40px 70px; }
+    to { background-position: -1500px -1500px, -1500px -1500px, -1460px -1430px; }
 }
 
 /* Main container for registration page content */

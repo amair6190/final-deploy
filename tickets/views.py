@@ -10,9 +10,11 @@ from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.http import JsonResponse
-import traceback # Import for detailed tracebacks
+from django.utils import timezone
+from datetime import timedelta
+import traceback
 
-from .models import Ticket, Message, InternalComment # Assuming CustomUser is imported via settings.AUTH_USER_MODEL
+from .models import Ticket, Message, InternalComment
 from .forms import (
     CustomLoginForm, 
     TicketCreationForm, 
@@ -21,6 +23,46 @@ from .forms import (
     CustomerRegistrationForm,
     InternalCommentForm
 )
+
+def get_date_range_filter():
+    """Helper function to return date filters based on the date range"""
+    today = timezone.now().date()
+    return {
+        'today': Q(created_at__date=today),
+        'week': Q(created_at__date__gte=today - timedelta(days=7)),
+        'month': Q(created_at__date__gte=today - timedelta(days=30)),
+    }
+
+def apply_ticket_filters(queryset, request):
+    """Apply common filters to ticket queryset based on request parameters"""
+    # Search filter
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(customer__username__icontains=search_query) |
+            Q(id__icontains=search_query)
+        )
+
+    # Status filter
+    status = request.GET.get('status', '')
+    if status:
+        queryset = queryset.filter(status=status)
+
+    # Priority filter
+    priority = request.GET.get('priority', '')
+    if priority:
+        queryset = queryset.filter(priority=priority)
+
+    # Date range filter
+    date_range = request.GET.get('date_range', '')
+    if date_range:
+        date_filters = get_date_range_filter()
+        if date_range in date_filters:
+            queryset = queryset.filter(date_filters[date_range])
+
+    return queryset
 
 def register_customer(request):
     if request.method == 'POST':
@@ -86,14 +128,21 @@ def is_in_group(user, group_name):
 @login_required
 def customer_dashboard(request):
     if not is_in_group(request.user, 'Customers'):
-        django_messages.error(request, "Access Denied. This dashboard is for customers.")
-        # Redirect based on actual role if possible, or to home/login
-        if is_in_group(request.user, 'Agents') or is_in_group(request.user, 'Admins'):
+        django_messages.error(request, "Access Denied. This dashboard is for customers only.")
+        if is_in_group(request.user, 'Agents'):
             return redirect('tickets:agent_dashboard')
-        return redirect('tickets:login') 
+        return redirect('tickets:login')
 
+    # Get all tickets for the current customer
     tickets = Ticket.objects.filter(customer=request.user).order_by('-created_at')
-    return render(request, 'tickets/customer_dashboard.html', {'tickets': tickets})
+    
+    # Apply filters
+    tickets = apply_ticket_filters(tickets, request)
+
+    context = {
+        'tickets': tickets,
+    }
+    return render(request, 'tickets/customer_dashboard.html', context)
 
 @login_required
 def create_ticket(request):
@@ -202,29 +251,44 @@ def ticket_detail(request, ticket_id):
 # --- Agent Views ---
 @login_required
 def agent_dashboard(request):
-    # More robust check for agent/admin access
     if not (is_in_group(request.user, 'Agents') or is_in_group(request.user, 'Admins') or request.user.is_superuser):
         django_messages.error(request, "Access Denied. This dashboard is for agents and administrators.")
         if is_in_group(request.user, 'Customers'):
             return redirect('tickets:customer_dashboard')
         return redirect('tickets:login')
 
-    unassigned_tickets = Ticket.objects.filter(agent__isnull=True, status__in=['OPEN', 'IN_PROGRESS']).order_by('-created_at')
-    # For agents, show only tickets assigned to them. Admins/superusers might see all assigned.
-    if request.user.is_superuser or is_in_group(request.user, 'Admins'):
-        assigned_tickets = Ticket.objects.filter(agent__isnull=False, status__in=['OPEN', 'IN_PROGRESS']).order_by('-created_at')
-    else: # Regular agent
-        assigned_tickets = Ticket.objects.filter(agent=request.user, status__in=['OPEN', 'IN_PROGRESS']).order_by('-created_at')
+    # Initialize queries with status filtering for unresolved tickets
+    unassigned_tickets = Ticket.objects.filter(agent__isnull=True).exclude(status='RESOLVED')
+    assigned_tickets = Ticket.objects.filter(agent__isnull=False).exclude(status='RESOLVED')
     
+    # Filter based on assignment status
+    assignment_filter = request.GET.get('assigned', '')
+    if assignment_filter == 'unassigned':
+        assigned_tickets = Ticket.objects.none()
+    elif assignment_filter == 'assigned_to_me':
+        assigned_tickets = assigned_tickets.filter(agent=request.user)
+    elif assignment_filter == 'all_assigned' and (request.user.is_superuser or is_in_group(request.user, 'Admins')):
+        pass  # Keep all assigned tickets for admins
+    else:
+        # Default: Show unassigned and tickets assigned to current agent
+        assigned_tickets = assigned_tickets.filter(agent=request.user)
+
+    # Apply common filters to both querysets
+    unassigned_tickets = apply_ticket_filters(unassigned_tickets, request)
+    assigned_tickets = apply_ticket_filters(assigned_tickets, request)
+
+    # Get resolved tickets (limited to 10)
     resolved_tickets_query = Q(status='RESOLVED')
-    if not (request.user.is_superuser or is_in_group(request.user, 'Admins')): # Agent only sees their resolved
+    if not (request.user.is_superuser or is_in_group(request.user, 'Admins')):
         resolved_tickets_query &= Q(agent=request.user)
     resolved_tickets = Ticket.objects.filter(resolved_tickets_query).order_by('-updated_at')[:10]
 
     context = {
-        'unassigned_tickets': unassigned_tickets,
-        'assigned_tickets': assigned_tickets,
+        'unassigned_tickets': unassigned_tickets.exclude(status='RESOLVED'),
+        'assigned_tickets': assigned_tickets.exclude(status='RESOLVED'),
         'resolved_tickets': resolved_tickets,
+        'is_admin': request.user.is_superuser or is_in_group(request.user, 'Admins'),
+        'is_agent': is_in_group(request.user, 'Agents'),
     }
     return render(request, 'tickets/agent_dashboard.html', context)
 
