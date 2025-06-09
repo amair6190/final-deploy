@@ -57,27 +57,29 @@
     <ul class="ticket-grid">
         {% for ticket in tickets %}
             <li class="ticket-card">
-                <div class="ticket-card-content">
-                    <div class="ticket-card-header">
-                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-title-link">
-                           #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
-                        </a>
-                        <span class="ticket-status status-{{ ticket.status }}">
-                            {{ ticket.get_status_display }}
-                        </span>
+                <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-card-link">
+                    <div class="ticket-card-content">
+                        <div class="ticket-card-header">
+                            <span class="ticket-title">
+                               #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
+                            </span>
+                            <span class="ticket-status status-{{ ticket.status }}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="ticket-card-body">
+                            <p>
+                                {{ ticket.description|truncatewords:20|linebreaksbr }}
+                            </p>
+                        </div>
+                        <div class="ticket-card-footer">
+                            <span>Created: {{ ticket.created_at|date:"M d, Y, g:i A" }}</span>
+                            {% if ticket.agent %}
+                                | <span>Agent: {{ ticket.agent.get_full_name|default:ticket.agent.username }}</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="ticket-card-body">
-                        <p>
-                            {{ ticket.description|truncatewords:20|linebreaksbr }}
-                        </p>
-                    </div>
-                    <div class="ticket-card-footer">
-                        <span>Created: {{ ticket.created_at|date:"M d, Y, g:i A" }}</span>
-                        {% if ticket.agent %}
-                            | <span>Agent: {{ ticket.agent.get_full_name|default:ticket.agent.username }}</span>
-                        {% endif %}
-                    </div>
-                </div>
+                </a>
             </li>
         {% endfor %}
     </ul>

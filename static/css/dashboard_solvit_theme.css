@@ -16,6 +16,7 @@
     --solvit-border-color: #333; /* A bit lighter for better visibility */
     --solvit-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     --solvit-glow-hover: 0 0 15px rgba(13, 110, 253, 0.4);
+    --solvit-pulse-glow: 0 0 25px rgba(13, 110, 253, 0.6);
     --status-open: #3d8bfd;       /* SolvIT blue-light - matches brand */
     --status-progress: #00c9a7;   /* Teal - fresh and active */
     --status-resolved: #20c997;   /* Green - success but matches theme */
@@ -127,6 +128,9 @@ body.solv-it-dashboard-theme::before {
     color: inherit;
     display: block;
     height: 100%;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
 }
 
 .ticket-card-link:hover {
@@ -134,11 +138,38 @@ body.solv-it-dashboard-theme::before {
     color: inherit;
 }
 
+.ticket-card-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(61, 139, 253, 0.05));
+    transform: translateY(100%);
+    transition: transform 0.5s ease;
+    z-index: -1;
+}
+
 .ticket-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-5px) scale(1.02);
     border-color: var(--solvit-blue-light);
     box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
     cursor: pointer;
+    animation: pulse-glow 1.5s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+    }
+    100% {
+        box-shadow: var(--solvit-pulse-glow), var(--solvit-shadow);
+    }
+}
+
+.ticket-card:hover .ticket-card-link::before {
+    transform: translateY(0);
 }
 
 .ticket-card-content {
@@ -153,15 +184,17 @@ body.solv-it-dashboard-theme::before {
     margin-bottom: var(--spacing-md);
 }
 
-.ticket-title-link {
+.ticket-title {
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     font-size: 1.2rem;
     color: var(--solvit-text-primary);
     text-decoration: none;
     line-height: 1.3;
+    transition: color var(--transition-speed) ease;
 }
-.ticket-title-link:hover {
+
+.ticket-card:hover .ticket-title {
     color: var(--solvit-blue-light);
 }
 
