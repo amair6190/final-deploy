@@ -166,3 +166,16 @@ class Message(models.Model):
         # Use mobile (USERNAME_FIELD) or username for display
         sender_identifier = self.sender.mobile if hasattr(self.sender, 'mobile') else self.sender.username
         return f"Message by {sender_identifier} on Ticket #{self.ticket.id} at {self.timestamp}"
+
+# --- InternalComment Model ---
+class InternalComment(models.Model):
+    ticket = models.ForeignKey(Ticket, related_name='internal_comments', on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='internal_comments', on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Internal comment by {self.author.username} on Ticket #{self.ticket.id}"
+
+    class Meta:
+        ordering = ['created_at']

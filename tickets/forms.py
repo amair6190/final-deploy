@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm # Ensure AuthenticationForm is also imported
 from django.core.exceptions import ValidationError # Import ValidationError
-from .models import Ticket, Message
+from .models import Ticket, Message, InternalComment
 from django.contrib.auth.models import Group
 
 CustomUser = get_user_model()
@@ -182,3 +182,15 @@ class TicketUpdateForm(forms.ModelForm):
         # Add Bootstrap classes
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+class InternalCommentForm(forms.ModelForm):
+    class Meta:
+        model = InternalComment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'rows': 3, 
+                'placeholder': 'Add an internal note (only visible to agents)',
+                'class': 'form-control'
+            })
+        }

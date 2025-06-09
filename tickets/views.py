@@ -12,13 +12,14 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 import traceback # Import for detailed tracebacks
 
-from .models import Ticket, Message # Assuming CustomUser is imported via settings.AUTH_USER_MODEL
+from .models import Ticket, Message, InternalComment # Assuming CustomUser is imported via settings.AUTH_USER_MODEL
 from .forms import (
     CustomLoginForm, 
     TicketCreationForm, 
     MessageCreationForm, 
     TicketUpdateForm,
-    CustomerRegistrationForm
+    CustomerRegistrationForm,
+    InternalCommentForm
 )
 
 def register_customer(request):
@@ -140,34 +141,47 @@ def ticket_detail(request, ticket_id):
         return redirect('home')
 
     if request.method == 'POST':
-        message_form = MessageCreationForm(request.POST)
-        if message_form.is_valid():
-            message = message_form.save(commit=False)
-            message.ticket = ticket
-            message.sender = request.user
-            message.save()
-            ticket.save()  # Update the ticket's updated_at timestamp
-            
-            # If this is an AJAX request, return JSON response
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Message posted successfully!'
-                })
-            
-            django_messages.success(request, 'Message posted successfully!')
-            return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+        if 'internal_comment' in request.POST and (is_agent or is_admin or request.user.is_superuser):
+            internal_comment_form = InternalCommentForm(request.POST)
+            if internal_comment_form.is_valid():
+                comment = internal_comment_form.save(commit=False)
+                comment.ticket = ticket
+                comment.author = request.user
+                comment.save()
+                ticket.save()  # Update the ticket's updated_at timestamp
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Internal comment added successfully!'
+                    })
+                
+                django_messages.success(request, 'Internal comment added successfully!')
+                return redirect('tickets:ticket_detail', ticket_id=ticket.id)
         else:
-            # If this is an AJAX request, return error response
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'errors': message_form.errors
-                })
+            message_form = MessageCreationForm(request.POST)
+            if message_form.is_valid():
+                message = message_form.save(commit=False)
+                message.ticket = ticket
+                message.sender = request.user
+                message.save()
+                ticket.save()  # Update the ticket's updated_at timestamp
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Message posted successfully!'
+                    })
+                
+                django_messages.success(request, 'Message posted successfully!')
+                return redirect('tickets:ticket_detail', ticket_id=ticket.id)
     else:
         message_form = MessageCreationForm()
+        internal_comment_form = InternalCommentForm() if (is_agent or is_admin or request.user.is_superuser) else None
 
     messages_queryset = ticket.messages.all().order_by('timestamp')
+    internal_comments = ticket.internal_comments.all().order_by('created_at') if (is_agent or is_admin or request.user.is_superuser) else None
+    
     ticket_update_form = None
     if (is_agent and ticket.agent == request.user) or is_admin or request.user.is_superuser:
         ticket_update_form = TicketUpdateForm(instance=ticket)
@@ -176,6 +190,8 @@ def ticket_detail(request, ticket_id):
         'ticket': ticket,
         'messages_list': messages_queryset,
         'message_form': message_form,
+        'internal_comments': internal_comments,
+        'internal_comment_form': internal_comment_form,
         'ticket_update_form': ticket_update_form,
         'is_customer': is_customer,
         'is_agent': is_agent or is_admin or request.user.is_superuser,
@@ -309,4 +325,4 @@ class CustomLoginView(DjangoLoginView):
             except Exception:
                 return settings.LOGIN_REDIRECT_URL # Return as string if not a name
         return reverse_lazy('home')
-    
+

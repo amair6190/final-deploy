@@ -39,6 +39,42 @@
     </div>
 {% endif %}
 
+{% if is_agent %}
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Internal Notes (Only visible to agents)</h4>
+        </div>
+        <div class="card-body">
+            {% if internal_comments %}
+                <div class="internal-comments-list" style="max-height: 300px; overflow-y: auto;">
+                    {% for comment in internal_comments %}
+                        <div class="card mb-2 bg-light">
+                            <div class="card-body">
+                                <p class="card-text">{{ comment.content|linebreaksbr }}</p>
+                                <footer class="blockquote-footer">
+                                    {% if comment.author.get_full_name %}{{ comment.author.get_full_name }}{% else %}{{ comment.author.username }}{% endif %} 
+                                    on {{ comment.created_at|date:"Y-m-d g:i A" }}
+                                </footer>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No internal notes yet.</p>
+            {% endif %}
+
+            {% if internal_comment_form %}
+                <form method="post" class="mt-3" id="internal-comment-form">
+                    {% csrf_token %}
+                    {{ internal_comment_form.as_p }}
+                    <input type="hidden" name="internal_comment" value="true">
+                    <button type="submit" class="btn btn-info">Add Internal Note</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
 <h4>Messages</h4>
 <div class="messages-list mb-3" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
     {% for message in messages_list %}
@@ -83,7 +119,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const messageForm = document.getElementById('message-form');
+    const internalCommentForm = document.getElementById('internal-comment-form');
     const messagesList = document.querySelector('.messages-list');
+    const internalCommentsList = document.querySelector('.internal-comments-list');
 
     if (messageForm) {
         messageForm.addEventListener('submit', function(e) {
@@ -99,10 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Clear the form
                     messageForm.reset();
-                    
-                    // Refresh the messages list
                     location.reload();
                 }
             })
@@ -112,9 +147,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Scroll messages list to bottom
+    if (internalCommentForm) {
+        internalCommentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: new FormData(internalCommentForm),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    internalCommentForm.reset();
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+
+    // Scroll messages and comments lists to bottom
     if (messagesList) {
         messagesList.scrollTop = messagesList.scrollHeight;
+    }
+    if (internalCommentsList) {
+        internalCommentsList.scrollTop = internalCommentsList.scrollHeight;
     }
 });
 </script>

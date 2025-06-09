@@ -198,4 +198,118 @@ body.solv-it-dashboard-theme::before {
     font-size: 1.2rem;
     color: var(--solvit-text-secondary);
     margin-bottom: var(--spacing-lg);
-} 
+}
+
+/* Agent Dashboard Specific Styles */
+.dashboard-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.dashboard-stats .badge {
+    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+}
+
+.section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: var(--solvit-text-primary);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--solvit-border-color);
+}
+
+.empty-section {
+    background: var(--solvit-card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: var(--solvit-text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Priority Badge Colors */
+.bg-low {
+    background-color: #6c757d !important;
+}
+
+.bg-medium {
+    background-color: #ffc107 !important;
+}
+
+.bg-high {
+    background-color: #fd7e14 !important;
+}
+
+.bg-urgent {
+    background-color: #dc3545 !important;
+}
+
+/* Status Colors in Cards */
+.ticket-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-open {
+    background-color: var(--status-open);
+    color: white;
+}
+
+.status-in_progress {
+    background-color: var(--status-progress);
+    color: white;
+}
+
+.status-resolved {
+    background-color: var(--status-resolved);
+    color: white;
+}
+
+.status-closed {
+    background-color: var(--status-closed);
+    color: white;
+}
+
+/* Resolved Ticket Cards */
+.ticket-card.resolved {
+    opacity: 0.8;
+}
+
+.ticket-card.resolved:hover {
+    opacity: 1;
+}
+
+.resolved-info {
+    color: var(--solvit-text-secondary);
+    font-size: 0.9rem;
+    margin: var(--spacing-md) 0;
+}
+
+/* Customer Info in Cards */
+.customer-info {
+    color: var(--solvit-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.priority-info {
+    margin-bottom: var(--spacing-md);
+}
+
+.priority-info .badge {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+}
+
+/* Description text in cards */
+.description {
+    color: var(--solvit-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: var(--spacing-md) 0;
+}
