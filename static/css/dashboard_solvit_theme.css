@@ -122,10 +122,23 @@ body.solv-it-dashboard-theme::before {
     backdrop-filter: blur(10px);
 }
 
+.ticket-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+}
+
+.ticket-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
 .ticket-card:hover {
     transform: translateY(-5px);
     border-color: var(--solvit-blue-light);
     box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+    cursor: pointer;
 }
 
 .ticket-card-content {

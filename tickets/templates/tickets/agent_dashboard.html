@@ -15,8 +15,8 @@
 <header class="dashboard-header">
     <h2 class="dashboard-title">Agent Dashboard</h2>
     <div class="dashboard-stats">
-        <span class="badge bg-warning">{{ unassigned_tickets.count }} Unassigned</span>
-        <span class="badge bg-primary ms-2">{{ assigned_tickets.count }} Assigned</span>
+        <span class="badge bg-primary">{{ assigned_tickets.count }} Assigned</span>
+        <span class="badge bg-warning ms-2">{{ unassigned_tickets.count }} Unassigned</span>
     </div>
 </header>
 
@@ -70,75 +70,38 @@
     </form>
 </div>
 
-<!-- Unassigned Tickets Section -->
-<h3 class="section-title">Unassigned Tickets</h3>
-{% if unassigned_tickets %}
-    <ul class="ticket-grid">
-        {% for ticket in unassigned_tickets %}
-            <li class="ticket-card">
-                <div class="ticket-card-content">
-                    <div class="ticket-card-header">
-                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-title-link">
-                           #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
-                        </a>
-                        <span class="ticket-status status-{{ ticket.status|lower }}">
-                            {{ ticket.get_status_display }}
-                        </span>
-                    </div>
-                    <div class="ticket-card-body">
-                        <p class="customer-info">
-                            <strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}
-                        </p>
-                        <p class="priority-info">
-                            <strong>Priority:</strong> <span class="badge bg-{{ ticket.priority|lower }}">{{ ticket.get_priority_display }}</span>
-                        </p>
-                        <p class="description">
-                            {{ ticket.description|truncatewords:20|linebreaksbr }}
-                        </p>
-                    </div>
-                    <div class="ticket-card-footer">
-                        <span>Created: {{ ticket.created_at|date:"M d, Y, g:i A" }}</span>
-                    </div>
-                </div>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <div class="empty-section">
-        <p>No unassigned tickets at the moment.</p>
-    </div>
-{% endif %}
-
 <!-- My Assigned Tickets Section -->
 <h3 class="section-title mt-4">My Assigned Tickets</h3>
 {% if assigned_tickets %}
     <ul class="ticket-grid">
         {% for ticket in assigned_tickets %}
             <li class="ticket-card">
-                <div class="ticket-card-content">
-                    <div class="ticket-card-header">
-                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-title-link">
-                           #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
-                        </a>
-                        <span class="ticket-status status-{{ ticket.status|lower }}">
-                            {{ ticket.get_status_display }}
-                        </span>
+                <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-card-link">
+                    <div class="ticket-card-content">
+                        <div class="ticket-card-header">
+                            <span class="ticket-title-link">
+                               #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
+                            </span>
+                            <span class="ticket-status status-{{ ticket.status|lower }}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="ticket-card-body">
+                            <p class="customer-info">
+                                <strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}
+                            </p>
+                            <p class="priority-info">
+                                <strong>Priority:</strong> <span class="badge bg-{{ ticket.priority|lower }}">{{ ticket.get_priority_display }}</span>
+                            </p>
+                            <p class="description">
+                                {{ ticket.description|truncatewords:20|linebreaksbr }}
+                            </p>
+                        </div>
+                        <div class="ticket-card-footer">
+                            <span>Updated: {{ ticket.updated_at|date:"M d, Y, g:i A" }}</span>
+                        </div>
                     </div>
-                    <div class="ticket-card-body">
-                        <p class="customer-info">
-                            <strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}
-                        </p>
-                        <p class="priority-info">
-                            <strong>Priority:</strong> <span class="badge bg-{{ ticket.priority|lower }}">{{ ticket.get_priority_display }}</span>
-                        </p>
-                        <p class="description">
-                            {{ ticket.description|truncatewords:20|linebreaksbr }}
-                        </p>
-                    </div>
-                    <div class="ticket-card-footer">
-                        <span>Updated: {{ ticket.updated_at|date:"M d, Y, g:i A" }}</span>
-                    </div>
-                </div>
+                </a>
             </li>
         {% endfor %}
     </ul>
@@ -148,33 +111,76 @@
     </div>
 {% endif %}
 
+<!-- Unassigned Tickets Section -->
+<h3 class="section-title mt-4">Unassigned Tickets</h3>
+{% if unassigned_tickets %}
+    <ul class="ticket-grid">
+        {% for ticket in unassigned_tickets %}
+            <li class="ticket-card">
+                <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-card-link">
+                    <div class="ticket-card-content">
+                        <div class="ticket-card-header">
+                            <span class="ticket-title-link">
+                               #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
+                            </span>
+                            <span class="ticket-status status-{{ ticket.status|lower }}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="ticket-card-body">
+                            <p class="customer-info">
+                                <strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}
+                            </p>
+                            <p class="priority-info">
+                                <strong>Priority:</strong> <span class="badge bg-{{ ticket.priority|lower }}">{{ ticket.get_priority_display }}</span>
+                            </p>
+                            <p class="description">
+                                {{ ticket.description|truncatewords:20|linebreaksbr }}
+                            </p>
+                        </div>
+                        <div class="ticket-card-footer">
+                            <span>Created: {{ ticket.created_at|date:"M d, Y, g:i A" }}</span>
+                        </div>
+                    </div>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="empty-section">
+        <p>No unassigned tickets at the moment.</p>
+    </div>
+{% endif %}
+
 <!-- Recently Resolved Tickets Section -->
 <h3 class="section-title mt-4">Recently Resolved Tickets</h3>
 {% if resolved_tickets %}
     <ul class="ticket-grid">
         {% for ticket in resolved_tickets %}
             <li class="ticket-card resolved">
-                <div class="ticket-card-content">
-                    <div class="ticket-card-header">
-                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-title-link">
-                           #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
-                        </a>
-                        <span class="ticket-status status-{{ ticket.status|lower }}">
-                            {{ ticket.get_status_display }}
-                        </span>
+                <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="ticket-card-link">
+                    <div class="ticket-card-content">
+                        <div class="ticket-card-header">
+                            <span class="ticket-title-link">
+                               #{{ ticket.id }} - {{ ticket.title|truncatechars:50 }}
+                            </span>
+                            <span class="ticket-status status-{{ ticket.status|lower }}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="ticket-card-body">
+                            <p class="customer-info">
+                                <strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}
+                            </p>
+                            <p class="resolved-info">
+                                <strong>Resolved by:</strong> {% if ticket.agent.get_full_name %}{{ ticket.agent.get_full_name }}{% else %}{{ ticket.agent.username }}{% endif %}
+                            </p>
+                        </div>
+                        <div class="ticket-card-footer">
+                            <span>Resolved: {{ ticket.updated_at|date:"M d, Y, g:i A" }}</span>
+                        </div>
                     </div>
-                    <div class="ticket-card-body">
-                        <p class="customer-info">
-                            <strong>Customer:</strong> {% if ticket.customer.get_full_name %}{{ ticket.customer.get_full_name }}{% else %}{{ ticket.customer.username }}{% endif %}
-                        </p>
-                        <p class="resolved-info">
-                            <strong>Resolved by:</strong> {% if ticket.agent.get_full_name %}{{ ticket.agent.get_full_name }}{% else %}{{ ticket.agent.username }}{% endif %}
-                        </p>
-                    </div>
-                    <div class="ticket-card-footer">
-                        <span>Resolved: {{ ticket.updated_at|date:"M d, Y, g:i A" }}</span>
-                    </div>
-                </div>
+                </a>
             </li>
         {% endfor %}
     </ul>
