@@ -5,15 +5,21 @@
 
 /* Using the established SolvIT color palette and base styles */
 :root {
-    --solvit-blue: #0d6efd;
-    --solvit-blue-dark: #0a58ca;
+    --solvit-blue: #3498db;
+    --solvit-blue-dark: #2980b9;
     --solvit-blue-light: #3d8bfd;
-    --solvit-black-bg: #121212;
-    --solvit-bg-dark: #121212;
-    --solvit-card-bg: #101620; /* Updated card background color */
-    --solvit-text-primary: #e0e0e0;
-    --solvit-text-secondary: #b0b0b0;
-    --solvit-border-color: #333; /* A bit lighter for better visibility */
+    --solvit-blue-transparent-1: rgba(52, 152, 219, 0.05);
+    --solvit-blue-transparent-2: rgba(52, 152, 219, 0.25);
+    
+    --solvit-black-bg: #0d1117;
+    --solvit-showcase-bg: #0A192F;
+    --solvit-form-bg: #101620;
+    --solvit-input-bg: #1C232E;
+    --solvit-input-bg-focus: #222B38;
+    
+    --solvit-text-primary: #E6EDF3;
+    --solvit-text-secondary: #B0BAC6;
+    --solvit-border-color: rgba(52, 152, 219, 0.1);
     --solvit-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     --solvit-glow-hover: 0 0 15px rgba(13, 110, 253, 0.4);
     --solvit-pulse-glow: 0 0 25px rgba(13, 110, 253, 0.6);
@@ -46,14 +52,14 @@ body.solv-it-dashboard-theme::before {
     background-image:
         linear-gradient(var(--solvit-blue-transparent-1) 1px, transparent 1px),
         linear-gradient(90deg, var(--solvit-blue-transparent-1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: animatedBackgroundGrid 180s linear infinite;
+    background-size: 60px 60px;
+    animation: animatedBackgroundGrid 200s linear infinite;
     pointer-events: none;
 }
 
 @keyframes animatedBackgroundGrid {
     from { background-position: 0 0; }
-    to { background-position: -1500px -1500px; }
+    to { background-position: -1800px -1800px; }
 }
 
 /* Add the blue transparency variables from registration theme */
@@ -236,11 +242,19 @@ body.solv-it-dashboard-theme::before {
 
 .search-input {
     flex: 1;
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid var(--solvit-border-color);
+    background-color: var(--solvit-input-bg);
+    border: 1px solid rgba(var(--solvit-blue), 0.2);
     border-radius: var(--border-radius) 0 0 var(--border-radius);
     color: var(--solvit-text-primary);
     padding: 8px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: var(--solvit-blue);
+    box-shadow: 0 0 0 0.2rem var(--solvit-blue-transparent-2);
+    outline: none;
+    background-color: var(--solvit-input-bg-focus);
 }
 
 .search-btn {
@@ -265,12 +279,20 @@ body.solv-it-dashboard-theme::before {
 }
 
 .filter-select {
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid var(--solvit-border-color);
+    background-color: var(--solvit-input-bg);
+    border: 1px solid rgba(var(--solvit-blue), 0.2);
     border-radius: var(--border-radius);
     color: var(--solvit-text-primary);
     padding: 8px 12px;
     min-width: 150px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.filter-select:focus {
+    border-color: var(--solvit-blue);
+    box-shadow: 0 0 0 0.2rem var(--solvit-blue-transparent-2);
+    outline: none;
+    background-color: var(--solvit-input-bg-focus);
 }
 
 .apply-filters-btn, .clear-filters-btn {
@@ -471,14 +493,14 @@ body.solv-it-dashboard-theme::before {
 }
 
 .empty-section {
-    background: rgba(30, 30, 30, 0.7);
+    background-color: var(--solvit-form-bg);
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
     text-align: center;
     color: var(--solvit-text-secondary);
     margin-bottom: var(--spacing-lg);
     backdrop-filter: blur(10px);
-    border: 1px solid var(--solvit-border-color);
+    border: 1px solid rgba(var(--solvit-blue), 0.1);
 }
 
 /* Priority Badge Colors */

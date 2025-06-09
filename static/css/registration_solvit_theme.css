@@ -49,26 +49,23 @@ body.solvit-theme-active.registration-page-body {
     overflow-x: hidden;
 }
 
-/* Honeycomb Background Pattern */
+/* Animated Grid Background */
 body.solvit-theme-active.registration-page-body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    z-index: -1;
-    background-color: var(--solvit-black-bg);
-    background-image: 
-        linear-gradient(30deg, var(--solvit-blue-transparent-1) 12%, transparent 12.5%, transparent 87%, var(--solvit-blue-transparent-1) 87.5%, var(--solvit-blue-transparent-1)),
-        linear-gradient(150deg, var(--solvit-blue-transparent-1) 12%, transparent 12.5%, transparent 87%, var(--solvit-blue-transparent-1) 87.5%, var(--solvit-blue-transparent-1)),
-        linear-gradient(30deg, var(--solvit-blue-transparent-1) 12%, transparent 12.5%, transparent 87%, var(--solvit-blue-transparent-1) 87.5%, var(--solvit-blue-transparent-1));
-    background-size: 80px 140px;
-    background-position: 0 0, 0 0, 40px 70px;
-    animation: animatedBackgroundHoneycomb 180s linear infinite;
+    z-index: -1; 
+    background-image:
+        linear-gradient(var(--solvit-blue-transparent-1) 1px, transparent 1px),
+        linear-gradient(90deg, var(--solvit-blue-transparent-1) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: animatedBackgroundGrid 200s linear infinite;
     pointer-events: none;
 }
 
-@keyframes animatedBackgroundHoneycomb {
-    from { background-position: 0 0, 0 0, 40px 70px; }
-    to { background-position: -1500px -1500px, -1500px -1500px, -1460px -1430px; }
+@keyframes animatedBackgroundGrid {
+    from { background-position: 0 0; }
+    to { background-position: -1800px -1800px; }
 }
 
 /* Main container for registration page content */
