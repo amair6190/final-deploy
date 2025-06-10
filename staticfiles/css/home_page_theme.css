@@ -1,0 +1,367 @@
+/* static/css/home_page_theme.css */
+
+/* --- SolvIT Theme Variables (Aligned with registration_solvit_theme.css) --- */
+:root {
+    --solvit-blue: #3498db;
+    --solvit-blue-darker: #2980b9;
+    --solvit-blue-transparent-1: rgba(52, 152, 219, 0.05);
+    --solvit-blue-transparent-2: rgba(52, 152, 219, 0.25);
+
+    --solvit-black-bg: #0d1117;
+    --solvit-showcase-bg: #0A192F; /* Used for Hero section */
+    --solvit-form-bg: #101620; /* Used for content sections */
+    --solvit-input-bg: #1C232E;
+    --solvit-input-bg-focus: #222B38;
+
+    --solvit-white: #FFFFFF;
+    --solvit-text-primary: #E6EDF3;
+    --solvit-text-secondary: #B0BAC6;
+    --solvit-text-placeholder: #7D8590;
+    --solvit-error-red: #e74c3c;
+
+    --font-primary: 'Montserrat', sans-serif;
+    --font-secondary: 'Open Sans', sans-serif;
+
+    /* Spacing & Sizing */
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2.5rem;
+    --border-radius: 6px;
+    --transition-fast: 0.2s ease;
+}
+
+/* --- GLOBAL STYLES --- */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Apply background to the body for a full-page effect */
+body.solv-it-theme-active {
+    margin: 0;
+    padding: 0;
+    background-color: var(--solvit-black-bg);
+    color: var(--solvit-text-primary);
+    font-family: var(--font-secondary);
+    position: relative; /* Stacking context for the grid */
+    z-index: 0;
+    overflow-x: hidden;
+}
+
+/* Animated Grid Background */
+body.solv-it-theme-active::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    background-image:
+        linear-gradient(var(--solvit-blue-transparent-1) 1px, transparent 1px),
+        linear-gradient(90deg, var(--solvit-blue-transparent-1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: animatedBackgroundGrid 180s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes animatedBackgroundGrid {
+    from { background-position: 0 0; }
+    to { background-position: -1500px -1500px; }
+}
+
+/* --- Page Container --- */
+.home-page-container.solv-it-theme {
+    width: 100%;
+    color: var(--solvit-text-primary);
+}
+
+/* --- Hero Section (Modeled after Showcase) --- */
+.hero-section {
+    background-color: var(--solvit-showcase-bg);
+    padding: 100px 20px;
+    position: relative;
+    overflow: hidden;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-bottom: 1px solid rgba(var(--solvit-blue), 0.1);
+}
+
+.hero-background-elements { /* Reusing from original home page */
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.animated-hero-icon {
+    position: absolute;
+    color: var(--solvit-blue);
+    font-size: 4em;
+    opacity: 0;
+    animation: subtleFadeInOutMoveHero 25s ease-in-out infinite;
+}
+
+/* Keyframes consistent with registration page but adapted */
+@keyframes subtleFadeInOutMoveHero {
+    0%, 100% { opacity: 0; transform: translateY(30px) scale(0.8); }
+    10%, 20% { opacity: 0.06; transform: translateY(0) scale(1); }
+    80%, 90% { opacity: 0.06; transform: translateY(-15px) scale(0.9); }
+}
+.animated-hero-icon.icon-cogs   { top: 10%; left: 5%; animation-delay: 0s; }
+.animated-hero-icon.icon-server { bottom: 15%; right: 10%; font-size: 5em; animation-delay: 6s; }
+.animated-hero-icon.icon-shield { top: 30%; right: 25%; font-size: 4.5em; animation-delay: 12s; }
+
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+}
+.hero-logo {
+    max-width: 200px;
+    margin-bottom: var(--spacing-md);
+}
+.hero-headline {
+    font-family: var(--font-primary);
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--solvit-white);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.2;
+}
+.hero-headline .hero-solveit-text {
+    color: var(--solvit-blue);
+}
+.hero-subheadline {
+    font-family: var(--font-secondary);
+    font-size: clamp(1rem, 2.5vw, 1.1rem);
+    color: var(--solvit-text-secondary);
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.7;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- CTA Buttons (Aligned with registration button) --- */
+.hero-cta-buttons .btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 5px;
+}
+
+.btn-primary-themed {
+    background: var(--solvit-blue);
+    color: var(--solvit-white);
+}
+.btn-primary-themed:hover {
+    background-color: var(--solvit-blue-darker);
+    transform: translateY(-2px);
+}
+
+.btn-secondary-themed {
+    background-color: transparent;
+    color: var(--solvit-blue);
+    border: 2px solid var(--solvit-blue);
+    padding: 10px 28px; /* Adjust padding because of border */
+}
+.btn-secondary-themed:hover {
+    background-color: var(--solvit-blue);
+    color: var(--solvit-white);
+    transform: translateY(-2px);
+}
+
+
+/* --- General Content Section Styling (Modeled after Form Area) --- */
+.home-section {
+    padding: 80px 0;
+    background-color: var(--solvit-form-bg);
+    border-bottom: 1px solid rgba(var(--solvit-blue), 0.08);
+}
+.home-section:last-of-type {
+    border-bottom: none;
+}
+.section-title {
+    font-family: var(--font-primary);
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 600;
+    color: var(--solvit-text-primary);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    position: relative;
+}
+.section-subtitle {
+    font-size: 1.1em;
+    color: var(--solvit-text-secondary);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+.section-title::after { /* Underline effect */
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 3px;
+    background-color: var(--solvit-blue);
+    border-radius: 2px;
+}
+.container-fluid {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 1140px;
+}
+.row { display: flex; flex-wrap: wrap; margin-right: -15px; margin-left: -15px; }
+.col-lg-6 { position: relative; width: 100%; padding-right: 15px; padding-left: 15px; }
+@media (min-width: 992px) { .col-lg-6 { flex: 0 0 50%; max-width: 50%; } }
+.align-items-center { align-items: center !important; }
+.img-fluid { max-width: 100%; height: auto; }
+.rounded { border-radius: var(--border-radius) !important; }
+.text-center { text-align: center !important; }
+
+/* --- About Us Section Specifics --- */
+.about-us-section .lead-text {
+    font-size: 1.2em;
+    font-weight: 400;
+    color: var(--solvit-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+.about-us-section p {
+    font-size: 1em;
+    line-height: 1.7;
+    color: var(--solvit-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+.section-image {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* --- FAQ Section (Themed like form elements) --- */
+.faq-section .accordion-item {
+    background-color: var(--solvit-input-bg);
+    border: 1px solid rgba(var(--solvit-blue), 0.15);
+    margin-bottom: 10px;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+}
+.faq-section .accordion-item:hover {
+    border-color: rgba(var(--solvit-blue), 0.3);
+}
+.faq-section .accordion-header { margin-bottom: 0; }
+.faq-section .accordion-button {
+    font-family: var(--font-primary);
+    font-weight: 500;
+    font-size: 1.05em;
+    background-color: transparent;
+    color: var(--solvit-text-primary);
+    padding: 15px 20px;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.faq-section .accordion-button:not(.collapsed) {
+    color: var(--solvit-blue);
+    background-color: var(--solvit-blue-transparent-1);
+    box-shadow: none;
+}
+.faq-icon {
+    margin-right: 12px;
+    color: var(--solvit-blue);
+    font-size: 1.1em;
+}
+.faq-section .accordion-body {
+    padding: 20px;
+    color: var(--solvit-text-secondary);
+    font-size: 0.95em;
+    line-height: 1.6;
+    background-color: var(--solvit-form-bg);
+    border-top: 1px solid rgba(var(--solvit-blue), 0.1);
+}
+
+/* --- Contact Us Section --- */
+.contact-us-section .contact-info h3 { margin-bottom: var(--spacing-lg); font-family: var(--font-primary); }
+.contact-us-section .contact-info p {
+    display: flex; align-items: center; margin-bottom: var(--spacing-md);
+}
+.contact-icon { color: var(--solvit-blue); margin-right: 12px; font-size: 1.2em; width: 20px; }
+.social-icons a { color: var(--solvit-text-secondary); font-size: 1.5em; margin: 0 10px; transition: color var(--transition-fast), transform var(--transition-fast); }
+.social-icons a:hover { color: var(--solvit-blue); transform: translateY(-2px); }
+
+/* --- Themed Contact Form --- */
+.contact-form .form-label {
+    margin-bottom: 8px; font-weight: 500; color: var(--solvit-text-secondary); font-size: 0.9em;
+}
+.form-control-themed {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: var(--solvit-input-bg);
+    border: 1px solid rgba(var(--solvit-blue), 0.2);
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+    font-size: 0.95em;
+    color: var(--solvit-text-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+    font-family: var(--font-secondary);
+}
+.form-control-themed:focus {
+    border-color: var(--solvit-blue);
+    box-shadow: 0 0 0 0.2rem var(--solvit-blue-transparent-2);
+    outline: none;
+    background-color: var(--solvit-input-bg-focus);
+}
+.contact-form textarea.form-control-themed { min-height: 120px; }
+.contact-form .btn-block { width: 100%; margin-top: 10px; }
+
+
+/* --- Footer --- */
+.solvit-footer {
+    background-color: var(--solvit-black-bg);
+    padding: var(--spacing-xl) 20px;
+    color: var(--solvit-text-secondary);
+    font-size: 0.9em;
+    border-top: 1px solid rgba(var(--solvit-blue), 0.1);
+}
+.solvit-footer a { color: var(--solvit-text-secondary); text-decoration: none; transition: color var(--transition-fast); }
+.solvit-footer a:hover { color: var(--solvit-blue); text-decoration: underline; }
+
+/* --- Responsiveness --- */
+@media (max-width: 991px) {
+    .hero-section { padding: 80px 20px; min-height: 50vh; }
+    .home-section { padding: 60px 0; }
+    .col-lg-6 { margin-bottom: var(--spacing-lg); }
+    .about-us-section .section-image { margin-bottom: 0; }
+    .contact-us-section .contact-info { margin-bottom: var(--spacing-xl); text-align: center; }
+    .contact-us-section .contact-info p { justify-content: center; }
+}
+
+@media (max-width: 767px) {
+    .hero-section { padding: 60px 15px; }
+    .hero-headline { font-size: 2rem; }
+    .hero-subheadline { font-size: 1em; }
+    .home-section { padding: 50px 0; }
+    .section-title { font-size: 1.8rem; }
+    .col-lg-6 { flex: 0 0 100%; max-width: 100%; margin-bottom: var(--spacing-md); }
+    .about-us-section .section-image { margin-bottom: var(--spacing-lg); }
+
+    .hero-cta-buttons { display: flex; flex-direction: column; align-items: center; }
+    .hero-cta-buttons .btn { width: 80%; max-width: 300px; margin-bottom: 10px; }
+}

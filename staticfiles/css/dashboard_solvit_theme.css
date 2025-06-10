@@ -1,0 +1,618 @@
+/* static/css/dashboard_solvit_theme.css */
+
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap');
+
+/* Using the established SolvIT color palette and base styles */
+:root {
+    --solvit-blue: #3498db;
+    --solvit-blue-dark: #2980b9;
+    --solvit-blue-light: #3d8bfd;
+    --solvit-blue-transparent-1: rgba(52, 152, 219, 0.05);
+    --solvit-blue-transparent-2: rgba(52, 152, 219, 0.25);
+    
+    --solvit-black-bg: #0d1117;
+    --solvit-showcase-bg: #0A192F;
+    --solvit-form-bg: #101620;
+    --solvit-input-bg: #1C232E;
+    --solvit-input-bg-focus: #222B38;
+    
+    --solvit-text-primary: #E6EDF3;
+    --solvit-text-secondary: #B0BAC6;
+    --solvit-border-color: rgba(52, 152, 219, 0.1);
+    --solvit-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    --solvit-glow-hover: 0 0 15px rgba(13, 110, 253, 0.4);
+    --solvit-pulse-glow: 0 0 25px rgba(13, 110, 253, 0.6);
+    --status-open: #3d8bfd;       /* SolvIT blue-light - matches brand */
+    --status-progress: #00c9a7;   /* Teal - fresh and active */
+    --status-resolved: #20c997;   /* Green - success but matches theme */
+    --status-closed: #495057;     /* Darker grey - more cohesive with dark theme */
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --border-radius: 8px;
+    --transition-speed: 0.3s;
+}
+
+/* Apply the animated grid background to the body */
+body.solv-it-dashboard-theme {
+    background-color: var(--solvit-black-bg);
+    font-family: 'Open Sans', sans-serif;
+    color: var(--solvit-text-primary);
+    position: relative; 
+    z-index: 0;
+    overflow-x: hidden;
+}
+
+/* Animated Grid Background - matching the registration page */
+body.solv-it-dashboard-theme::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1; 
+    background-image:
+        linear-gradient(var(--solvit-blue-transparent-1) 1px, transparent 1px),
+        linear-gradient(90deg, var(--solvit-blue-transparent-1) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: animatedBackgroundGrid 200s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes animatedBackgroundGrid {
+    from { background-position: 0 0; }
+    to { background-position: -1800px -1800px; }
+}
+
+/* Add the blue transparency variables from registration theme */
+:root {
+    --solvit-blue-transparent-1: rgba(52, 152, 219, 0.05);
+    --solvit-blue-transparent-2: rgba(52, 152, 219, 0.25);
+}
+
+@keyframes animatedBackgroundGrid {
+    from { background-position: 0 0; }
+    to { background-position: -1500px -1500px; }
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--solvit-border-color);
+}
+
+.dashboard-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+}
+
+.create-ticket-btn {
+    background: linear-gradient(135deg, var(--solvit-blue), var(--solvit-blue-light));
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) ease;
+    box-shadow: var(--solvit-shadow);
+    border: none;
+}
+
+.create-ticket-btn:hover, .create-ticket-btn:focus {
+    transform: translateY(-2px);
+    box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+    color: white;
+}
+
+/* Ticket Grid Layout */
+.ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    padding: 0;
+    list-style: none;
+}
+
+.ticket-card {
+    background-color: var(--solvit-card-bg);
+    border: 1px solid var(--solvit-border-color);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) ease;
+    box-shadow: var(--solvit-shadow);
+    overflow: hidden; /* Ensures border-top radius is clean */
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+}
+
+.ticket-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.ticket-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.ticket-card-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(61, 139, 253, 0.05));
+    transform: translateY(100%);
+    transition: transform 0.5s ease;
+    z-index: -1;
+}
+
+.ticket-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    border-color: var(--solvit-blue-light);
+    box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+    cursor: pointer;
+    animation: pulse-glow 1.5s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: var(--solvit-glow-hover), var(--solvit-shadow);
+    }
+    100% {
+        box-shadow: var(--solvit-pulse-glow), var(--solvit-shadow);
+    }
+}
+
+.ticket-card:hover .ticket-card-link::before {
+    transform: translateY(0);
+}
+
+.ticket-card-content {
+    padding: var(--spacing-md);
+    flex-grow: 1;
+}
+
+.ticket-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.ticket-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--solvit-text-primary);
+    text-decoration: none;
+    line-height: 1.3;
+    transition: color var(--transition-speed) ease;
+}
+
+.ticket-card:hover .ticket-title {
+    color: var(--solvit-blue-light);
+}
+
+.ticket-card-body {
+    font-size: 0.95rem;
+    color: var(--solvit-text-secondary);
+    padding-bottom: var(--spacing-md);
+}
+
+.ticket-card-footer {
+    margin-top: auto; /* Pushes footer to the bottom */
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--solvit-border-color);
+    font-size: 0.85rem;
+    color: var(--solvit-text-secondary);
+}
+
+/* Search and Filter Section */
+.search-filter-section {
+    margin-bottom: var(--spacing-lg);
+    background: rgba(30, 30, 30, 0.7);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--solvit-border-color);
+}
+
+.search-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.search-box {
+    display: flex;
+    flex: 1;
+    min-width: 250px;
+}
+
+.search-input {
+    flex: 1;
+    background-color: var(--solvit-input-bg);
+    border: 1px solid rgba(var(--solvit-blue), 0.2);
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    color: var(--solvit-text-primary);
+    padding: 8px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: var(--solvit-blue);
+    box-shadow: 0 0 0 0.2rem var(--solvit-blue-transparent-2);
+    outline: none;
+    background-color: var(--solvit-input-bg-focus);
+}
+
+.search-btn {
+    background: var(--solvit-blue);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.search-btn:hover {
+    background: var(--solvit-blue-dark);
+}
+
+.filter-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    flex: 2;
+}
+
+.filter-select {
+    background-color: var(--solvit-input-bg);
+    border: 1px solid rgba(var(--solvit-blue), 0.2);
+    border-radius: var(--border-radius);
+    color: var(--solvit-text-primary);
+    padding: 8px 12px;
+    min-width: 150px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.filter-select:focus {
+    border-color: var(--solvit-blue);
+    box-shadow: 0 0 0 0.2rem var(--solvit-blue-transparent-2);
+    outline: none;
+    background-color: var(--solvit-input-bg-focus);
+}
+
+.apply-filters-btn, .clear-filters-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    font-weight: 600;
+}
+
+.apply-filters-btn {
+    background: var(--solvit-blue);
+    border: none;
+    color: white;
+}
+
+.apply-filters-btn:hover {
+    background: var(--solvit-blue-dark);
+    transform: translateY(-1px);
+}
+
+.clear-filters-btn {
+    background: transparent;
+    border: 1px solid var(--solvit-border-color);
+    color: var(--solvit-text-primary);
+    text-decoration: none;
+}
+
+.clear-filters-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Loading States and Button Interactions */
+.button-loader {
+    display: none;
+}
+
+.button-loader .fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.apply-filters-btn:disabled,
+.clear-filters-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.search-btn:disabled {
+    background: var(--solvit-blue-dark);
+    cursor: not-allowed;
+}
+
+.filter-select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Error States */
+.search-input.error {
+    border-color: #dc3545;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: none;
+}
+
+.error-message.visible {
+    display: block;
+}
+
+/* Status Badges */
+.ticket-status {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-left: var(--spacing-md);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all var(--transition-speed) ease;
+}
+
+/* Status colors - works for both lowercase and uppercase class names */
+[class*="status-open"], [class*="status-OPEN"] { 
+    background: rgba(0, 122, 255, 0.15);
+    border-color: rgba(0, 122, 255, 0.3);
+    color: #007aff;
+}
+
+[class*="status-in_progress"], [class*="status-IN_PROGRESS"] { 
+    background: rgba(255, 149, 0, 0.15);
+    border-color: rgba(255, 149, 0, 0.3);
+    color: #ff9500;
+}
+
+[class*="status-resolved"], [class*="status-RESOLVED"] { 
+    background: rgba(52, 199, 89, 0.15);
+    border-color: rgba(52, 199, 89, 0.3);
+    color: #34c759;
+}
+
+[class*="status-closed"], [class*="status-CLOSED"] { 
+    background: rgba(73, 80, 87, 0.15);
+    border-color: rgba(73, 80, 87, 0.3);
+    color: #adb5bd;
+}
+
+/* Hover effects for status badges */
+.ticket-status:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[class*="status-open"]:hover, [class*="status-OPEN"]:hover {
+    background: rgba(0, 122, 255, 0.2);
+    border-color: rgba(0, 122, 255, 0.4);
+}
+
+[class*="status-in_progress"]:hover, [class*="status-IN_PROGRESS"]:hover {
+    background: rgba(255, 149, 0, 0.2);
+    border-color: rgba(255, 149, 0, 0.4);
+}
+
+[class*="status-resolved"]:hover, [class*="status-RESOLVED"]:hover {
+    background: rgba(52, 199, 89, 0.2);
+    border-color: rgba(52, 199, 89, 0.4);
+}
+
+[class*="status-closed"]:hover, [class*="status-CLOSED"]:hover {
+    background: rgba(73, 80, 87, 0.2);
+    border-color: rgba(73, 80, 87, 0.4);
+}
+
+/* Empty Message */
+.empty-dashboard {
+    text-align: center;
+    padding: 50px;
+    background-color: var(--solvit-card-bg);
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--solvit-border-color);
+}
+.empty-dashboard p {
+    font-size: 1.2rem;
+    color: var(--solvit-text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Agent Dashboard Specific Styles */
+.dashboard-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.dashboard-stats .badge {
+    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    background: rgba(13, 110, 253, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    color: var(--solvit-text-primary);
+}
+
+.badge.bg-warning {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+}
+
+.badge.bg-primary {
+    background: rgba(61, 139, 253, 0.15) !important;
+    border-color: rgba(61, 139, 253, 0.3);
+    color: var(--solvit-blue-light);
+}
+
+.section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: var(--solvit-text-primary);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(61, 139, 253, 0.2);
+    text-shadow: 0 0 20px rgba(61, 139, 253, 0.1);
+}
+
+.empty-section {
+    background-color: var(--solvit-form-bg);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: var(--solvit-text-secondary);
+    margin-bottom: var(--spacing-lg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(var(--solvit-blue), 0.1);
+}
+
+/* Priority Badge Colors */
+.priority-info .badge {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge.bg-low, [class*="bg-LOW"] {
+    background: rgba(108, 117, 125, 0.15) !important;
+    color: #adb5bd;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.badge.bg-medium, [class*="bg-MEDIUM"] {
+    background: rgba(255, 193, 7, 0.15) !important;
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.badge.bg-high, [class*="bg-HIGH"] {
+    background: rgba(253, 126, 20, 0.15) !important;
+    color: #fd7e14;
+    border: 1px solid rgba(253, 126, 20, 0.3);
+}
+
+.badge.bg-urgent, [class*="bg-URGENT"] {
+    background: rgba(220, 53, 69, 0.15) !important;
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+/* Resolved Ticket Cards */
+.ticket-card.resolved {
+    opacity: 0.8;
+}
+
+.ticket-card.resolved:hover {
+    opacity: 1;
+}
+
+.resolved-info {
+    color: var(--solvit-text-secondary);
+    font-size: 0.9rem;
+    margin: var(--spacing-md) 0;
+}
+
+/* Customer Info in Cards */
+.customer-info {
+    color: var(--solvit-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.priority-info {
+    margin-bottom: var(--spacing-md);
+}
+
+.priority-info .badge {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Description text in cards */
+.description {
+    color: var(--solvit-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: var(--spacing-md) 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .search-filter-form {
+        flex-direction: column;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    .filter-box {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filter-select {
+        width: 100%;
+    }
+
+    .apply-filters-btn, .clear-filters-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .ticket-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .dashboard-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
