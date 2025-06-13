@@ -14,21 +14,24 @@ class CustomUserManager(BaseUserManager):
         if not mobile:
             raise ValueError('The Mobile (USERNAME_FIELD) must be set')
 
-        # Username field (if it exists on the model for other purposes)
-        # needs to be handled. Let's assume it should also be unique
-        # and try to populate it from an extra_field or default it.
-        # If 'username' is in extra_fields, use it. Otherwise, what should it be?
-        # For now, let's assume 'username' is passed in extra_fields if needed.
-        username = extra_fields.pop('username', None) # Expect 'username' to be passed if needed
-        if not username: # If you absolutely need a username field to be populated
-             # You could default it to mobile, but ensure it's unique if the field requires it.
-             # This can be tricky if 'username' has its own unique constraint.
-             # For now, let's require it to be passed if it exists and is needed.
-             pass # Or raise ValueError('Username must be provided if the model has a username field')
+        # Handle username field - if not provided, generate a unique one based on mobile
+        username = extra_fields.pop('username', None)
+        if not username:
+            # Generate a unique username based on mobile
+            username = f"user_{mobile}"
+            # Ensure uniqueness by adding a counter if needed
+            counter = 1
+            original_username = username
+            while self.model.objects.filter(username=username).exists():
+                username = f"{original_username}_{counter}"
+                counter += 1
 
         email = extra_fields.pop('email', None)
         if email:
             email = self.normalize_email(email)
+        # Convert empty string to None for unique constraint
+        if email == '':
+            email = None
         
         first_name = extra_fields.pop('first_name', '')
         last_name = extra_fields.pop('last_name', '')
@@ -64,9 +67,7 @@ class CustomUserManager(BaseUserManager):
         if not username: # If the model has a mandatory username field
             raise ValueError('Superuser must have a username.')
 
-
-        # When USERNAME_FIELD is 'mobile', createsuperuser will prompt for 'mobile'.
-        # 'username' and 'email' are in REQUIRED_FIELDS.
+        # Pass username explicitly to create_user
         return self.create_user(mobile=mobile, password=password, username=username, email=email, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):

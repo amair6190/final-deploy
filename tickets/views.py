@@ -83,8 +83,9 @@ def register_customer(request):
                     print(f"ERROR: {error_msg} for user {user.username}") # Log for admin
                 
                 # print(f"Attempting to login user {user.username}...") # Debug print
-                login(request, user)
-                django_messages.success(request, f'Welcome, {user.username}! Your account has been created and you are now logged in.')
+                # Specify the backend when logging in the user after registration
+                login(request, user, backend='tickets.backends.MobileOrEmailBackend')
+                django_messages.success(request, f'Welcome, {user.get_full_name() or user.username}! Your account has been created and you are now logged in.')
                 return redirect('tickets:customer_dashboard')
             
             except Exception as e:

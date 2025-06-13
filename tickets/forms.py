@@ -132,10 +132,16 @@ class CustomerRegistrationForm(UserCreationForm):
     # clean_email and clean_mobile as before, they will check CustomUser for uniqueness.
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email:
-            query = CustomUser.objects.filter(email__iexact=email)
-            if self.instance and self.instance.pk: query = query.exclude(pk=self.instance.pk)
-            if query.exists(): raise ValidationError(self.fields['email'].error_messages['unique'])
+        # Convert empty string to None to handle unique constraint properly
+        if not email:  # This covers both empty string and None
+            return None
+        
+        # Only check uniqueness if email is provided
+        query = CustomUser.objects.filter(email__iexact=email)
+        if self.instance and self.instance.pk: 
+            query = query.exclude(pk=self.instance.pk)
+        if query.exists(): 
+            raise ValidationError(self.fields['email'].error_messages['unique'])
         return email
 
     def clean_mobile(self):
@@ -149,10 +155,28 @@ class CustomerRegistrationForm(UserCreationForm):
             if query.exists(): raise ValidationError(self.fields['mobile'].error_messages['unique'])
         return mobile
         
-    # No save() override needed here. UserCreationForm's save() will call
-    # CustomUserManager.create_user(mobile=cleaned_data['mobile'], password=..., 
-    #                                first_name=cleaned_data['first_name'], etc.)
-    # The manager will then set CustomUser.username to mobile by default.
+    def save(self, commit=True):
+        # Override save to ensure proper user creation through our custom manager
+        user = super().save(commit=False)
+        
+        # The UserCreationForm might not properly set username, so let's ensure it's set
+        if not user.username:
+            # Generate a unique username based on mobile
+            username = f"user_{user.mobile}"
+            counter = 1
+            original_username = username
+            while CustomUser.objects.filter(username=username).exists():
+                username = f"{original_username}_{counter}"
+                counter += 1
+            user.username = username
+        
+        # Handle email properly (convert empty string to None)
+        if hasattr(user, 'email') and user.email == '':
+            user.email = None
+            
+        if commit:
+            user.save()
+        return user
 
 # --- Other forms ---
 class TicketCreationForm(forms.ModelForm):  # ... as before ...
