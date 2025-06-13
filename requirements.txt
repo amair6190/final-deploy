@@ -1,3 +1,24 @@
+# Core Django framework
+Django>=5.2.1,<5.3
+
+# Web server
 gunicorn==21.2.0
+
+# Database adapter
 psycopg2-binary==2.9.9
+
+# Environment configuration
 django-environ==0.11.2
+
+# Static file serving
+whitenoise==6.6.0
+
+# Forms and UI
+django-crispy-forms
+crispy-bootstrap5
+
+# Security
+django-ratelimit==4.1.0
+
+# Image processing for file uploads
+Pillow==10.2.0
