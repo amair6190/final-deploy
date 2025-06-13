@@ -7,22 +7,33 @@ Complete production deployment scripts for deploying Django Ticketing System on 
 This deployment package includes everything needed to deploy a production-ready Django Ticketing System on Ubuntu Server 20.04/22.04 with:
 
 - ✅ **PostgreSQL Database Server**
-- ✅ **Nginx Web Server with SSL**
+- ✅ **Nginx Web Server (HTTP/HTTPS options)**
 - ✅ **Gunicorn WSGI Server**
 - ✅ **Redis Caching**
 - ✅ **Security Hardening**
 - ✅ **Monitoring & Backup Systems**
 - ✅ **Automated Deployment**
+- ✅ **Modern Dropbox-style File Upload Interface**
+
+## 🌐 Deployment Options
+
+### 🔐 **HTTPS Deployment (Recommended for Production)**
+Full SSL/HTTPS deployment with Let's Encrypt certificates
+
+### 🌍 **HTTP-Only Deployment (Quick & Simple)**
+HTTP-only deployment without SSL - perfect for development/internal use
 
 ## 📁 Deployment Scripts
 
 | Script | Description | Phase |
 |--------|-------------|-------|
-| `deploy.sh` | 🎯 **Master deployment script** - Runs all phases | All |
+| `deploy.sh` | 🎯 **Master deployment script (HTTPS)** - Runs all phases | All |
+| `deploy-http-only.sh` | 🌍 **HTTP-Only deployment script** - No SSL setup | All |
 | `01-system-setup.sh` | System packages and user creation | 1 |
 | `02-postgresql-setup.sh` | PostgreSQL database configuration | 2 |
 | `03-django-app-setup.sh` | Django application deployment | 3 |
 | `04-nginx-setup.sh` | Nginx web server and SSL setup | 4 |
+| `04-nginx-setup-no-ssl.sh` | Nginx web server (HTTP only) | 4 |
 | `05-security-hardening.sh` | Security configuration and hardening | 5 |
 
 ## 🚀 Quick Deployment
@@ -30,15 +41,39 @@ This deployment package includes everything needed to deploy a production-ready 
 ### Prerequisites
 - Ubuntu Server 20.04/22.04 LTS
 - Root or sudo access
-- Domain name pointed to your server (optional but recommended)
+- Domain name pointed to your server (for HTTPS) or server IP (for HTTP)
 - SSH access to the server
 
-### One-Command Deployment
+### 🌍 **HTTP-Only Deployment (Recommended for You)**
+Perfect for development, testing, or internal networks without SSL complexity:
+
 ```bash
 # Upload deployment scripts to your server
 scp -r ubuntu-deployment/ user@your-server:/tmp/
 
-# SSH to your server and run deployment
+# SSH to your server and run HTTP-only deployment
+ssh user@your-server
+cd /tmp/ubuntu-deployment
+sudo chmod +x *.sh
+sudo ./deploy-http-only.sh
+```
+
+**Features:**
+- ✅ No SSL/certificate complexity
+- ✅ Works with IP address or domain
+- ✅ Full security features (except HTTPS)
+- ✅ Modern Dropbox-style file upload
+- ✅ Rate limiting and attack protection
+- ✅ Complete interactive setup
+
+### 🔐 **HTTPS Deployment (Production)**
+Full SSL deployment with automatic certificate management:
+
+```bash
+# Upload deployment scripts to your server
+scp -r ubuntu-deployment/ user@your-server:/tmp/
+
+# SSH to your server and run HTTPS deployment
 ssh user@your-server
 cd /tmp/ubuntu-deployment
 sudo chmod +x *.sh
