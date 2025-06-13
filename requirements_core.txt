@@ -1,0 +1,27 @@
+# Core Django and dependencies
+Django>=5.2.1,<5.3
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
+
+# Environment and Configuration
+django-environ==0.12.0
+
+# Static Files (for production)
+whitenoise==6.6.0
+
+# Forms and UI
+django-crispy-forms
+crispy-bootstrap5
+
+# Rate limiting
+django-ratelimit==4.1.0
+
+# Caching (optional, for production performance)
+redis==5.0.1
+django-redis==5.4.0
+
+# File validation and processing
+Pillow==10.2.0
+
+# Security headers
+django-csp==3.8
