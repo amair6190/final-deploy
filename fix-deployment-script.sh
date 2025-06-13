@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Quick fix for the deployment script
+# Run this on your Ubuntu server to update the deploy-http-only.sh script
+
+echo "🔧 Fixing Django Ticketing System deployment script..."
+
+# Download the fixed script content
+cat > deploy-http-only-fixed.sh << 'EOF'
+#!/bin/bash
+
 # Django Ticketing System - Complete HTTP-Only Deployment Script
 # This script automates the entire deployment process without SSL
 # Run this script as root on a fresh Ubuntu server
@@ -476,3 +485,36 @@ trap cleanup EXIT
 
 # Run main function
 main "$@"
+EOF
+
+# Make the fixed script executable
+chmod +x deploy-http-only-fixed.sh
+
+# Replace the original script
+mv deploy-http-only-fixed.sh deploy-http-only.sh
+
+echo "✅ Deployment script has been fixed!"
+echo ""
+echo "🚀 Now you can run the deployment again with:"
+echo "   sudo ./deploy-http-only.sh"
+echo ""
+echo "📋 The fix addresses:"
+echo "   ✅ Django module import error during configuration"
+echo "   ✅ Proper secret key generation after Django installation"
+echo "   ✅ Enhanced error handling and logging"
+EOF
+
+chmod +x fix-deployment-script.sh
+
+echo "🔧 Quick fix script created!"
+echo ""
+echo "📋 On your Ubuntu server, run these commands:"
+echo ""
+echo "# Navigate to your deployment directory"
+echo "cd ~/solvit-django-ticketing-system/ubuntu-deployment"
+echo ""
+echo "# Run the fix script"
+echo "./fix-deployment-script.sh"
+echo ""
+echo "# Then run the deployment again"
+echo "sudo ./deploy-http-only.sh"
