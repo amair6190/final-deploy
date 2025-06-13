@@ -46,6 +46,35 @@
         <div class="ticket-description">
             {{ ticket.description|linebreaksbr }}
         </div>
+
+        {% if ticket_attachments %}
+        <div class="ticket-attachments">
+            <h4><i class="fas fa-paperclip me-2"></i>Attachments</h4>
+            <div class="attachments-list">
+                {% for attachment in ticket_attachments %}
+                <div class="attachment-item">
+                    <div class="attachment-info">
+                        <i class="fas fa-file"></i>
+                        <div class="attachment-details">
+                            <a href="{{ attachment.file.url }}" target="_blank" class="attachment-name">
+                                {{ attachment.filename }}
+                            </a>
+                            <div class="attachment-meta">
+                                Uploaded by {% if attachment.uploaded_by.get_full_name %}{{ attachment.uploaded_by.get_full_name }}{% else %}{{ attachment.uploaded_by.username }}{% endif %}
+                                • {{ attachment.uploaded_at|date:"M d, Y g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="attachment-actions">
+                        <a href="{{ attachment.file.url }}" download class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 

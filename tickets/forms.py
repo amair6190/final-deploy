@@ -10,6 +10,42 @@ from django.contrib.auth.models import Group
 
 CustomUser = get_user_model()
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+    def validate(self, value):
+        if value:
+            if isinstance(value, list):
+                for file in value:
+                    self.validate_single_file(file)
+            else:
+                self.validate_single_file(value)
+
+    def validate_single_file(self, file):
+        if file:
+            # Check file size (5MB limit)
+            if file.size > 5 * 1024 * 1024:
+                raise ValidationError('File size cannot exceed 5MB.')
+            
+            # Check file extension
+            allowed_extensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.txt', '.zip', '.rar']
+            file_extension = os.path.splitext(file.name)[1].lower()
+            if file_extension not in allowed_extensions:
+                raise ValidationError(f'File type {file_extension} is not allowed. Allowed types: {", ".join(allowed_extensions)}')
+
 class CustomLoginForm(AuthenticationForm):
     # When USERNAME_FIELD is 'mobile', the 'username' field in AuthenticationForm
     # will be used for the mobile number input.
@@ -179,10 +215,34 @@ class CustomerRegistrationForm(UserCreationForm):
         return user
 
 # --- Other forms ---
-class TicketCreationForm(forms.ModelForm):  # ... as before ...
+class TicketCreationForm(forms.ModelForm):
+    attachments = MultipleFileField(required=False, help_text="You can attach multiple files. Maximum 5MB per file.")
+    
     class Meta:
         model = Ticket
         fields = ['title', 'description', 'priority']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter a descriptive title for your issue'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Describe your issue in detail...'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'form-control'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customize labels
+        self.fields['title'].label = 'Issue Title'
+        self.fields['description'].label = 'Issue Description'
+        self.fields['priority'].label = 'Priority Level'
+        self.fields['attachments'].label = 'Attach Files (Optional)'
 
 class MessageCreationForm(forms.ModelForm):
     class Meta:
@@ -238,39 +298,3 @@ class InternalCommentForm(forms.ModelForm):
                 'class': 'form-control'
             })
         }
-
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
-        else:
-            result = single_file_clean(data, initial)
-        return result
-
-    def validate(self, value):
-        if value:
-            if isinstance(value, list):
-                for file in value:
-                    self.validate_single_file(file)
-            else:
-                self.validate_single_file(value)
-
-    def validate_single_file(self, file):
-        if file:
-            # Check file size (5MB limit)
-            if file.size > 5 * 1024 * 1024:
-                raise ValidationError('File size cannot exceed 5MB.')
-            
-            # Check file extension
-            allowed_extensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.txt', '.zip', '.rar']
-            file_extension = os.path.splitext(file.name)[1].lower()
-            if file_extension not in allowed_extensions:
-                raise ValidationError(f'File type {file_extension} is not allowed. Allowed types: {", ".join(allowed_extensions)}')

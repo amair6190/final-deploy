@@ -14,7 +14,7 @@ from django.utils import timezone
 from datetime import timedelta
 import traceback
 
-from .models import Ticket, Message, InternalComment
+from .models import Ticket, Message, InternalComment, TicketAttachment
 from .forms import (
     CustomLoginForm, 
     TicketCreationForm, 
@@ -155,12 +155,30 @@ def create_ticket(request):
         return redirect('tickets:login')
 
     if request.method == 'POST':
-        form = TicketCreationForm(request.POST)
+        form = TicketCreationForm(request.POST, request.FILES)
         if form.is_valid():
             ticket = form.save(commit=False)
             ticket.customer = request.user
             ticket.status = 'OPEN' 
             ticket.save()
+            
+            # Handle file attachments
+            attachments = form.cleaned_data.get('attachments')
+            if attachments:
+                if isinstance(attachments, list):
+                    for attachment in attachments:
+                        TicketAttachment.objects.create(
+                            ticket=ticket,
+                            file=attachment,
+                            uploaded_by=request.user
+                        )
+                else:
+                    TicketAttachment.objects.create(
+                        ticket=ticket,
+                        file=attachments,
+                        uploaded_by=request.user
+                    )
+            
             django_messages.success(request, 'Ticket created successfully!')
             return redirect('tickets:ticket_detail', ticket_id=ticket.id)
     else:
@@ -239,6 +257,9 @@ def ticket_detail(request, ticket_id):
     if (is_agent and ticket.agent == request.user) or is_admin or request.user.is_superuser:
         ticket_update_form = TicketUpdateForm(instance=ticket)
 
+    # Get ticket attachments
+    ticket_attachments = ticket.attachments.all().order_by('-uploaded_at')
+
     context = {
         'ticket': ticket,
         'messages_list': messages_queryset,
@@ -246,6 +267,7 @@ def ticket_detail(request, ticket_id):
         'internal_comments': internal_comments,
         'internal_comment_form': internal_comment_form,
         'ticket_update_form': ticket_update_form,
+        'ticket_attachments': ticket_attachments,
         'is_customer': is_customer,
         'is_agent': is_agent or is_admin or request.user.is_superuser,
     }
