@@ -208,11 +208,14 @@ def ticket_detail(request, ticket_id):
                 django_messages.success(request, 'Internal comment added successfully!')
                 return redirect('tickets:ticket_detail', ticket_id=ticket.id)
         else:
-            message_form = MessageCreationForm(request.POST)
+            message_form = MessageCreationForm(request.POST, request.FILES)
             if message_form.is_valid():
                 message = message_form.save(commit=False)
                 message.ticket = ticket
                 message.sender = request.user
+                # Ensure via_whatsapp is set (defaults to False for web interface)
+                if not hasattr(message, 'via_whatsapp') or message.via_whatsapp is None:
+                    message.via_whatsapp = False
                 message.save()
                 ticket.save()  # Update the ticket's updated_at timestamp
                 
@@ -228,7 +231,7 @@ def ticket_detail(request, ticket_id):
         message_form = MessageCreationForm()
         internal_comment_form = InternalCommentForm() if (is_agent or is_admin or request.user.is_superuser) else None
 
-    messages_queryset = ticket.messages.all().order_by('timestamp')
+    messages_queryset = ticket.messages.all().order_by('created_at')
     internal_comments = ticket.internal_comments.all().order_by('created_at') if (is_agent or is_admin or request.user.is_superuser) else None
     
     ticket_update_form = None

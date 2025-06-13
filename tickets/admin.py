@@ -26,9 +26,9 @@ class TicketAdminForm(ModelForm):
 class MessageInline(admin.TabularInline): # Or StackedInline
     model = Message
     extra = 0 # Number of empty forms to display (0 is usually better for existing tickets)
-    readonly_fields = ('sender', 'content', 'timestamp') # Make inline messages read-only
+    readonly_fields = ('sender', 'content', 'created_at') # Make inline messages read-only
     can_delete = False # Optionally prevent deleting messages from ticket admin
-    fields = ('sender', 'timestamp', 'content') # Control order and fields shown
+    fields = ('sender', 'created_at', 'content') # Control order and fields shown
 
     def has_add_permission(self, request, obj=None): # Prevent adding new messages via inline
         return False
@@ -52,12 +52,12 @@ class TicketAdmin(admin.ModelAdmin):
 # --- Message Admin ---
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'ticket_link', 'sender', 'timestamp', 'content_excerpt')
-    list_filter = ('sender', 'timestamp', 'ticket__status') # Filter by ticket status
+    list_display = ('id', 'ticket_link', 'sender', 'created_at', 'content_excerpt')
+    list_filter = ('sender', 'created_at', 'ticket__status') # Filter by ticket status
     search_fields = ('content', 'ticket__title', 'sender__username', 'sender__mobile') # Added mobile
     raw_id_fields = ('ticket', 'sender')
-    readonly_fields = ('timestamp',)
-    date_hierarchy = 'timestamp'
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
 
     def content_excerpt(self, obj):
         return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content

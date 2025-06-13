@@ -129,6 +129,14 @@ TIME_FORMAT = 'g:i A'  # 12-hour format with AM/PM
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files (Uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# File Upload Settings
+MAX_UPLOAD_SIZE = 5242880  # 5MB in bytes
 
 # Login and Authentication Settings
 LOGIN_URL = 'tickets:login'

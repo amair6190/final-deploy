@@ -11,47 +11,33 @@
 <div class="ticket-create-container">
     <div class="ticket-create-card">
         <div class="ticket-create-header">
-            <h2><i class="fas fa-ticket-alt me-2"></i> Create a New Support Ticket</h2>
+            <h2><i class="fas fa-ticket-alt"></i> Create a New Support Ticket</h2>
             <p class="subtitle">Please provide details about your issue</p>
         </div>
         <div class="ticket-create-body">
             <form method="post" class="ticket-form">
                 {% csrf_token %}
                 {% for field in form %}
-                    <div class="form-group mb-4">
-                        <label for="{{ field.id_for_label }}" class="form-label">
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">
                             {{ field.label }}
                             {% if field.field.required %}
                                 <span class="text-danger">*</span>
                             {% endif %}
                         </label>
-                        
-                        {% if field.name == 'priority' %}
-                            <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control" required>
-                                {% for value, text in field.field.choices %}
-                                    <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>
-                                        {{ text }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
-                        
+                        {{ field }}
                         {% if field.help_text %}
                             <small class="help-text">{{ field.help_text }}</small>
                         {% endif %}
-                        
                         {% if field.errors %}
                             <ul class="errorlist">
                                 {% for error in field.errors %}
-                                    <li><i class="fas fa-exclamation-circle"></i> {{ error }}</li>
+                                    <li>{{ error }}</li>
                                 {% endfor %}
                             </ul>
                         {% endif %}
                     </div>
                 {% endfor %}
-                
                 <div class="ticket-form-buttons">
                     <button type="submit" class="btn btn-create">
                         <i class="fas fa-paper-plane"></i> Create Ticket
@@ -73,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = form.querySelector('.btn-create');
 
     // Focus first input field
-    const firstInput = form.querySelector('input[type="text"], textarea');
+    const firstInput = form.querySelector('input, textarea, select');
     if (firstInput) {
         firstInput.focus();
     }
@@ -81,26 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add loading state to submit button
     form.addEventListener('submit', function(e) {
         submitBtn.classList.add('loading');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        submitBtn.innerHTML = '<span>Creating...</span>';
         submitBtn.disabled = true;
     });
-
-    // Enhance the priority select field
-    const prioritySelect = document.querySelector('select[name="priority"]');
-    if (prioritySelect) {
-        prioritySelect.addEventListener('change', function(e) {
-            const value = e.target.value;
-            const options = {
-                'LOW': '#27ae60',
-                'MEDIUM': '#f39c12',
-                'HIGH': '#e67e22',
-                'URGENT': '#c0392b'
-            };
-            this.style.color = options[value] || '#2c3e50';
-        });
-        // Set initial color
-        prioritySelect.dispatchEvent(new Event('change'));
-    }
 });
 </script>
 {% endblock %}

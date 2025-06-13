@@ -1,5 +1,6 @@
 # tickets/forms.py
 
+import os
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm # Ensure AuthenticationForm is also imported
@@ -159,13 +160,32 @@ class TicketCreationForm(forms.ModelForm):  # ... as before ...
         model = Ticket
         fields = ['title', 'description', 'priority']
 
-class MessageCreationForm(forms.ModelForm):  # ... as before ...
+class MessageCreationForm(forms.ModelForm):
     class Meta:
         model = Message
-        fields = ['content']
+        fields = ['content', 'attachment', 'via_whatsapp']
         widgets = {
-            'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Type your message...'})
+            'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Type your message...'}),
+            'attachment': forms.FileInput(attrs={'class': 'form-control'}),
+            'via_whatsapp': forms.HiddenInput()
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.initial['via_whatsapp'] = False  # Default to False
+
+    def clean_attachment(self):
+        attachment = self.cleaned_data.get('attachment')
+        if attachment:
+            # 5 MB limit
+            if attachment.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("File size must be under 5MB")
+            # Validate file extension - add or remove extensions as needed
+            valid_extensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.txt']
+            ext = os.path.splitext(attachment.name)[1]
+            if ext.lower() not in valid_extensions:
+                raise forms.ValidationError("Unsupported file type. Allowed types: PDF, DOC, DOCX, JPG, PNG, TXT")
+        return attachment
 
 class TicketUpdateForm(forms.ModelForm):
     class Meta:

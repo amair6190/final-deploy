@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views # Django's built-in auth views
+from django.conf import settings
+from django.conf.urls.static import static
 from tickets.views import home # Import your home view
 
 app_name = 'tickets'
@@ -28,3 +30,7 @@ urlpatterns = [
     path('tickets/', include('tickets.urls')), # Include your app's URLs
     path('', home, name='home'), # Root path to home view
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

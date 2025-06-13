@@ -1,0 +1,294 @@
+/* Create Ticket Theme */
+:root {
+    --dark-bg: #1a1a1a;
+    --dark-card: #242424;
+    --dark-input: #2d2d2d;
+    --dark-border: #333;
+    --dark-text: #e0e0e0;
+    --dark-text-muted: #999;
+    --dark-primary: #2563eb;
+    --dark-primary-hover: #1d4ed8;
+    --dark-success: #059669;
+    --dark-success-hover: #047857;
+    --dark-cancel: #4b5563;
+    --dark-cancel-hover: #374151;
+    --dark-header-gradient: linear-gradient(135deg, #1e293b 0%, #1e40af 100%);
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+.ticket-create-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.ticket-create-card {
+    background: var(--dark-card);
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    border: 1px solid var(--dark-border);
+}
+
+.ticket-create-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.ticket-create-header {
+    background: var(--dark-header-gradient);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.ticket-create-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 50%, transparent 55%);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ticket-create-header h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.ticket-create-header .subtitle {
+    margin-top: 0.5rem;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.ticket-create-body {
+    padding: 2rem;
+    background: var(--dark-card);
+}
+
+/* Form Styling */
+.ticket-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.ticket-form label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--dark-text);
+    font-size: 1.1rem;
+}
+
+.ticket-form input[type="text"],
+.ticket-form textarea,
+.ticket-form select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--dark-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: var(--dark-input);
+    color: var(--dark-text);
+}
+
+.ticket-form input[type="text"]:focus,
+.ticket-form textarea:focus,
+.ticket-form select:focus {
+    border-color: var(--dark-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+    outline: none;
+}
+
+.ticket-form textarea {
+    min-height: 150px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/* Priority Select Styling */
+.ticket-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+}
+
+.ticket-form select:focus,
+.ticket-form select:active {
+    background-color: var(--dark-input);
+}
+
+.ticket-form select option {
+    background-color: var(--dark-card);
+    color: var(--dark-text);
+}
+
+/* Priority Colors - with improved contrast */
+.ticket-form select[name="priority"] option[value="LOW"] { 
+    background-color: var(--dark-input);
+    color: #4ade80; 
+}
+.ticket-form select[name="priority"] option[value="MEDIUM"] { 
+    background-color: var(--dark-input);
+    color: #fbbf24; 
+}
+.ticket-form select[name="priority"] option[value="HIGH"] { 
+    background-color: var(--dark-input);
+    color: #fb923c; 
+}
+.ticket-form select[name="priority"] option[value="URGENT"] { 
+    background-color: var(--dark-input);
+    color: #f87171; 
+}
+
+/* Button Styling */
+.ticket-form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.ticket-form .btn {
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.ticket-form .btn-create {
+    background: var(--dark-success);
+    color: white;
+    border: none;
+    flex: 1;
+}
+
+.ticket-form .btn-create:hover {
+    background: var(--dark-success-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.ticket-form .btn-cancel {
+    background: var(--dark-cancel);
+    color: var(--dark-text);
+    border: none;
+    min-width: 120px;
+}
+
+.ticket-form .btn-cancel:hover {
+    background: var(--dark-cancel-hover);
+    transform: translateY(-2px);
+}
+
+/* Error Messages */
+.ticket-form .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+    color: #f87171;
+    font-size: 0.9rem;
+}
+
+.ticket-form .errorlist li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(248, 113, 113, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+/* Help Text */
+.ticket-form .help-text {
+    color: var(--dark-text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+/* Loading State */
+.btn-create.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn-create.loading::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ffffff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Required Field Indicator */
+.text-danger {
+    color: #f87171;
+    margin-left: 0.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .ticket-create-container {
+        margin: 1rem auto;
+    }
+
+    .ticket-create-header {
+        padding: 1.5rem;
+    }
+
+    .ticket-create-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .ticket-create-body {
+        padding: 1.5rem;
+    }
+
+    .ticket-form-buttons {
+        flex-direction: column;
+    }
+
+    .ticket-form .btn {
+        width: 100%;
+    }
+
+    .ticket-form .btn-cancel {
+        order: 2;
+    }
+}

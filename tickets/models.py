@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.conf import settings
+import os
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, mobile, password=None, **extra_fields):
@@ -156,16 +157,36 @@ class Ticket(models.Model):
 
 # --- Message Model ---
 class Message(models.Model):
-    # ... (no changes needed if using settings.AUTH_USER_MODEL) ...
     ticket = models.ForeignKey(Ticket, related_name='messages', on_delete=models.CASCADE)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_messages', on_delete=models.CASCADE)
     content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    attachment = models.FileField(upload_to='message_attachments/', null=True, blank=True)
+    via_whatsapp = models.BooleanField(default=False)
 
     def __str__(self):
-        # Use mobile (USERNAME_FIELD) or username for display
         sender_identifier = self.sender.mobile if hasattr(self.sender, 'mobile') else self.sender.username
-        return f"Message by {sender_identifier} on Ticket #{self.ticket.id} at {self.timestamp}"
+        return f"Message by {sender_identifier} on Ticket #{self.ticket.id} at {self.created_at}"
+
+    class Meta:
+        ordering = ['created_at']
+
+# --- TicketAttachment Model ---
+class TicketAttachment(models.Model):
+    ticket = models.ForeignKey(Ticket, related_name='attachments', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='ticket_attachments/')
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='uploaded_attachments', on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"Attachment {self.file.name} for Ticket #{self.ticket.id}"
+
+    def filename(self):
+        return os.path.basename(self.file.name)
+
+    class Meta:
+        ordering = ['-uploaded_at']
 
 # --- InternalComment Model ---
 class InternalComment(models.Model):
