@@ -8,27 +8,26 @@
 set -e  # Exit on any error
 
 echo "🚀 SolvIT Django Ticketing System - Ubuntu Server Deployment"
-ec# Start and enable services
-log "Starting and enabling services..."
-systemctl daemon-reload
-systemctl enable solvit-ticketing
-systemctl start solvit-ticketing
-
-# Try to start Nginx (might fail if port conflicts exist)
-log "Starting Nginx for static files..."
-if systemctl start nginx 2>/dev/null; then
-    systemctl enable nginx
-    log "✅ Nginx started successfully on port 8080"
-else
-    warning "Nginx failed to start - may have port conflicts. Static files will be served by Django."
-fi
-
-# Setup firewall (allowing both Django port and Nginx port)
-log "Configuring firewall..."
-ufw --force enable
-ufw allow 22/tcp
-ufw allow 8001/tcp comment "SolvIT Django App"
-ufw allow 8080/tcp comment "Nginx for SolvIT static files"====================================================="
+echo "====================================================="
+echo ""
+echo -e "${BLUE}📋 Deployment Information${NC}"
+echo "This script will deploy your SolvIT Django Ticketing System."
+echo "You will be prompted to provide the following information:"
+echo ""
+echo -e "${YELLOW}🗄️  Database Configuration:${NC}"
+echo "   • Database name (letters, numbers, underscores only - no hyphens)"
+echo "   • Database username (letters, numbers, underscores only)"  
+echo "   • Database password (minimum 8 characters)"
+echo ""
+echo -e "${YELLOW}👤 Admin User Configuration:${NC}"
+echo "   • Admin username (default: admin)"
+echo "   • Admin email (default: admin@solvit.com)"
+echo "   • Admin mobile number (optional)"
+echo "   • Admin password (minimum 8 characters)"
+echo ""
+echo -e "${BLUE}Press Enter to continue with the deployment...${NC}"
+read -p ""
+echo ""
 
 # Color codes for output
 RED='\033[0;31m'
@@ -84,6 +83,13 @@ log "Starting and enabling services..."
 systemctl start postgresql
 systemctl enable postgresql
 
+# Verify PostgreSQL is running
+if ! systemctl is-active --quiet postgresql; then
+    error "PostgreSQL failed to start. Please check the service status."
+    exit 1
+fi
+log "✅ PostgreSQL is running successfully"
+
 # Create application directory
 APP_DIR="/opt/solvit-ticketing"
 log "Creating application directory: $APP_DIR"
@@ -117,22 +123,90 @@ fi
 
 # Database setup
 log "Setting up PostgreSQL database..."
-DB_NAME="solvit_ticketing"
-DB_USER="solvit_user"
-DB_PASSWORD="SolvIT2024$(date +%s | tail -c 4)"
 
-# Create database and user
+# Prompt for database details
+echo ""
+echo -e "${BLUE}📋 Database Configuration${NC}"
+echo "Please provide the following database details:"
+echo -e "${YELLOW}Note: Database names can only contain letters, numbers, and underscores (no hyphens or spaces)${NC}"
+echo ""
+
+# Validate database name
+while true; do
+    read -p "Enter database name [default: solvit_ticketing]: " DB_NAME
+    DB_NAME=${DB_NAME:-solvit_ticketing}
+    
+    # Check if database name is valid (only letters, numbers, underscores)
+    if [[ "$DB_NAME" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        break
+    else
+        echo -e "${RED}Invalid database name. Use only letters, numbers, and underscores. Must start with a letter or underscore.${NC}"
+        echo -e "${YELLOW}Example: solvit_ticketing, my_database, ticketing_system${NC}"
+    fi
+done
+
+# Validate database username
+while true; do
+    read -p "Enter database username [default: solvit_user]: " DB_USER
+    DB_USER=${DB_USER:-solvit_user}
+    
+    # Check if username is valid (only letters, numbers, underscores)
+    if [[ "$DB_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        break
+    else
+        echo -e "${RED}Invalid username. Use only letters, numbers, and underscores. Must start with a letter or underscore.${NC}"
+        echo -e "${YELLOW}Example: solvit_user, admin_user, db_user${NC}"
+    fi
+done
+
+while true; do
+    read -s -p "Enter database password: " DB_PASSWORD
+    echo ""
+    read -s -p "Confirm database password: " DB_PASSWORD_CONFIRM
+    echo ""
+    if [[ "$DB_PASSWORD" == "$DB_PASSWORD_CONFIRM" ]]; then
+        if [[ ${#DB_PASSWORD} -lt 8 ]]; then
+            echo -e "${RED}Password must be at least 8 characters long. Please try again.${NC}"
+        else
+            break
+        fi
+    else
+        echo -e "${RED}Passwords do not match. Please try again.${NC}"
+    fi
+done
+
+log "Database details: $DB_NAME with user: $DB_USER"
+
+# Create database and user with error handling
+log "Creating PostgreSQL database and user..."
+
+# Drop existing database and user (ignore errors if they don't exist)
 sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
 sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;" 2>/dev/null || true
-sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD' CREATEDB CREATEROLE;"
-sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+
+# Create user
+if ! sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD' CREATEDB CREATEROLE;"; then
+    error "Failed to create database user: $DB_USER"
+    exit 1
+fi
+
+# Create database
+if ! sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"; then
+    error "Failed to create database: $DB_NAME"
+    exit 1
+fi
+
+# Grant privileges
+if ! sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"; then
+    error "Failed to grant privileges to user: $DB_USER"
+    exit 1
+fi
 
 # Grant schema permissions
-sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
-sudo -u postgres psql -d $DB_NAME -c "ALTER SCHEMA public OWNER TO $DB_USER;"
+sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;" || warning "Schema permissions may need manual adjustment"
+sudo -u postgres psql -d $DB_NAME -c "ALTER SCHEMA public OWNER TO $DB_USER;" || warning "Schema ownership may need manual adjustment"
 
-log "Database created: $DB_NAME with user: $DB_USER"
+log "✅ Database created successfully: $DB_NAME with user: $DB_USER"
 
 # Create Django production settings
 log "Creating Django production settings..."
@@ -162,6 +236,16 @@ SECURE_SSL_REDIRECT = False  # Set to True when using HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = False  # Set to True when using HTTPS
 CSRF_COOKIE_SECURE = False  # Set to True when using HTTPS
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8001',
+    'http://127.0.0.1:8080',
+    'http://localhost:8001',
+    'http://localhost:8080',
+]
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
 
 # Static and media files
 STATIC_URL = '/static/'
@@ -203,25 +287,59 @@ python manage.py collectstatic --noinput
 
 # Create superuser
 log "Creating Django superuser..."
+
+# Prompt for superuser details
+echo ""
+echo -e "${BLUE}👤 Django Superuser Configuration${NC}"
+echo "Please provide the following admin user details:"
+echo ""
+
+read -p "Enter admin username [default: admin]: " ADMIN_USERNAME
+ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+
+read -p "Enter admin email [default: admin@solvit.com]: " ADMIN_EMAIL
+ADMIN_EMAIL=${ADMIN_EMAIL:-admin@solvit.com}
+
+read -p "Enter admin mobile number [optional]: " ADMIN_MOBILE
+ADMIN_MOBILE=${ADMIN_MOBILE:-1234567890}
+
+while true; do
+    read -s -p "Enter admin password: " ADMIN_PASSWORD
+    echo ""
+    read -s -p "Confirm admin password: " ADMIN_PASSWORD_CONFIRM
+    echo ""
+    if [[ "$ADMIN_PASSWORD" == "$ADMIN_PASSWORD_CONFIRM" ]]; then
+        if [[ ${#ADMIN_PASSWORD} -lt 8 ]]; then
+            echo -e "${RED}Password must be at least 8 characters long. Please try again.${NC}"
+        else
+            break
+        fi
+    else
+        echo -e "${RED}Passwords do not match. Please try again.${NC}"
+    fi
+done
+
+log "Creating superuser: $ADMIN_USERNAME"
+
 python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
-if not User.objects.filter(username='admin').exists():
+if not User.objects.filter(username='$ADMIN_USERNAME').exists():
     try:
         admin_user = User.objects.create_superuser(
-            username='admin',
-            email='admin@solvit.com',
-            password='SolvIT@2024',
-            mobile='1234567890'
+            username='$ADMIN_USERNAME',
+            email='$ADMIN_EMAIL',
+            password='$ADMIN_PASSWORD',
+            mobile='$ADMIN_MOBILE'
         )
         print('✅ Admin user created successfully')
     except Exception as e:
         print(f'Note: {e}')
         # Fallback method
         admin_user = User.objects.create_user(
-            username='admin',
-            email='admin@solvit.com',
-            password='SolvIT@2024'
+            username='$ADMIN_USERNAME',
+            email='$ADMIN_EMAIL',
+            password='$ADMIN_PASSWORD'
         )
         admin_user.is_staff = True
         admin_user.is_superuser = True
@@ -358,9 +476,9 @@ Database User: $DB_USER
 Database Password: $DB_PASSWORD
 
 Django Admin Credentials:
-Username: admin
-Password: SolvIT@2024
-Email: admin@solvit.com
+Username: $ADMIN_USERNAME
+Password: $ADMIN_PASSWORD
+Email: $ADMIN_EMAIL
 
 Application Access:
 - Django App: http://127.0.0.1:8001/ (for your proxy server)
@@ -437,7 +555,7 @@ echo -e "${BLUE}📋 Deployment Summary:${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}🌐 Django App: http://127.0.0.1:8001/${NC}"
 echo -e "${GREEN}👤 Admin Panel: http://127.0.0.1:8001/admin/${NC}"
-echo -e "${GREEN}🔑 Admin Login: admin / SolvIT@2024${NC}"
+echo -e "${GREEN}🔑 Admin Login: $ADMIN_USERNAME / $ADMIN_PASSWORD${NC}"
 echo -e "${GREEN}🗄️ Database: $DB_NAME ($DB_USER)${NC}"
 echo -e "${GREEN}📁 App Directory: $APP_DIR${NC}"
 echo ""
