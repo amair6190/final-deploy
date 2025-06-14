@@ -121,6 +121,10 @@ else
     pip install django gunicorn psycopg2-binary python-dotenv
 fi
 
+# Install admin theme
+log "Installing Django Jazzmin admin theme..."
+pip install django-jazzmin
+
 # Database setup
 log "Setting up PostgreSQL database..."
 
@@ -218,6 +222,18 @@ from .settings import *
 DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']  # Update with your domain
 
+# Middleware with WhiteNoise for static files
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise for static files
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
 # Database configuration
 DATABASES = {
     'default': {
@@ -253,20 +269,27 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Logging
+# WhiteNoise for static files serving
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Additional static files directories
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Logging - Simplified and reliable
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {
+        'console': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/solvit-ticketing.log',
+            'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
         },
@@ -282,8 +305,34 @@ export DJANGO_SETTINGS_MODULE=it_ticketing_system.settings_production
 # Run Django setup
 log "Running Django migrations and setup..."
 source venv/bin/activate
-python manage.py migrate
-python manage.py collectstatic --noinput
+
+# Ensure logs directory exists
+mkdir -p logs
+
+# Run migrations
+python manage.py migrate --settings=it_ticketing_system.settings_production
+
+# Collect static files with production settings
+log "Collecting static files..."
+python manage.py collectstatic --noinput --settings=it_ticketing_system.settings_production
+
+# Verify static files were collected
+if [ ! -d "staticfiles/admin" ]; then
+    warning "Static files collection may have failed. Retrying..."
+    python manage.py collectstatic --noinput --clear --settings=it_ticketing_system.settings_production
+fi
+
+log "✅ Static files collected successfully"
+
+# Manually copy Jazzmin static files (workaround for Django collectstatic not detecting them)
+log "Copying Jazzmin theme static files..."
+if [ -d "venv/lib/python3.12/site-packages/jazzmin/static" ]; then
+    cp -r venv/lib/python3.12/site-packages/jazzmin/static/jazzmin staticfiles/ 2>/dev/null || true
+    cp -r venv/lib/python3.12/site-packages/jazzmin/static/vendor staticfiles/ 2>/dev/null || true 
+    log "✅ Jazzmin static files copied successfully"
+else
+    warning "Jazzmin static files not found - theme may not work properly"
+fi
 
 # Create superuser
 log "Creating Django superuser..."
@@ -590,6 +639,11 @@ echo ""
 echo -e "${BLUE}📋 Important Files:${NC}"
 echo -e "${YELLOW}  $APP_DIR/DEPLOYMENT_INFO.txt         # Deployment details${NC}"
 echo -e "${YELLOW}  /var/log/solvit-ticketing.log        # Application logs${NC}"
+echo -e "${YELLOW}  $APP_DIR/ADMIN_THEMING_GUIDE.md      # Admin panel theming guide${NC}"
+echo ""
+echo -e "${BLUE}🎨 Admin Panel Customization:${NC}"
+echo -e "${YELLOW}  Your admin panel includes a custom theme!${NC}"
+echo -e "${YELLOW}  See ADMIN_THEMING_GUIDE.md for more theme options${NC}"
 echo ""
 echo -e "${GREEN}🎯 Your SolvIT Django App is running on http://127.0.0.1:8001${NC}"
 echo -e "${GREEN}   Configure your existing Nginx proxy to forward requests to this address!${NC}"

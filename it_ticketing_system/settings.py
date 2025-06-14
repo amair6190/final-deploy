@@ -7,6 +7,7 @@ AUTH_USER_MODEL = 'tickets.CustomUser' # app_name.ModelName
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -29,6 +30,12 @@ AUTHENTICATION_BACKENDS = [
 # Application definition
 
 INSTALLED_APPS = [
+    # Admin themes (uncomment the one you want to use)
+    'jazzmin',  # Modern Bootstrap-based theme - uncomment to use
+    # 'grappelli',  # Classic professional theme - uncomment to use
+    # 'admin_interface',  # Feature-rich theme - uncomment to use
+    # 'colorfield',  # Required for admin_interface
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -76,16 +83,27 @@ WSGI_APPLICATION = 'it_ticketing_system.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'it_ticketing_db',
-        'USER': 'amair',
-        'PASSWORD': 'Psql@solvit@2025',
-        'HOST': '10.0.0.6',
-        'PORT': '5432',
+# Use different databases for local development vs production
+if os.environ.get('DJANGO_SETTINGS_MODULE') == 'it_ticketing_system.settings_production':
+    # Production PostgreSQL (used in deployment)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'solvit_ticketing',
+            'USER': 'solvit_user',
+            'PASSWORD': 'SolvIT2024',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
     }
-}
+else:
+    # Local development SQLite (no setup required)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -149,6 +167,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Crispy Forms Settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Admin Panel Customization
+ADMIN_SITE_HEADER = "SolvIT Ticketing System"
+ADMIN_SITE_TITLE = "SolvIT Admin"
+ADMIN_INDEX_TITLE = "Welcome to SolvIT Administration"
+
+# Import Jazzmin settings if using jazzmin theme
+# Uncomment the next line if you enable jazzmin in INSTALLED_APPS
+from .jazzmin_settings import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS
 
 # Session Settings
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 1  # 1 day

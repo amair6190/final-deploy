@@ -185,6 +185,26 @@ ALLOWED_FILE_TYPES = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.txt']
 
 ## 🚀 Production Deployment
 
+### Automated Ubuntu Server Deployment
+The project includes a comprehensive deployment script for Ubuntu servers:
+
+```bash
+# Make the deployment script executable
+chmod +x deploy-ubuntu-server.sh
+
+# Run the interactive deployment
+./deploy-ubuntu-server.sh
+```
+
+The deployment script will:
+- Install all required dependencies (Python, PostgreSQL, Nginx)
+- Set up virtual environment and install Python packages
+- Configure PostgreSQL database with secure credentials
+- Set up systemd service for automatic startup
+- Configure static files serving with WhiteNoise
+- Apply Jazzmin admin theme
+- Create Django superuser account
+
 ### Environment Variables
 Create a `.env` file:
 ```
@@ -203,6 +223,38 @@ python manage.py collectstatic --noinput
 ```bash
 pg_dump your_database > backup.sql
 ```
+
+## 🗑️ System Uninstallation
+
+### Complete System Removal
+The project includes a comprehensive uninstall script for complete system removal:
+
+```bash
+# Make the uninstall script executable
+chmod +x uninstall-solvit-ticketing.sh
+
+# Run the interactive uninstall (IRREVERSIBLE!)
+./uninstall-solvit-ticketing.sh
+```
+
+⚠️ **WARNING**: The uninstall process is irreversible and will remove:
+- All application files and code
+- PostgreSQL database and all ticket data
+- System service configurations
+- Static files and media uploads
+
+### Pre-Uninstall Backup
+Always backup your data before uninstalling:
+
+```bash
+# Backup database
+sudo -u postgres pg_dump test2 > solvit_backup_$(date +%Y%m%d).sql
+
+# Backup media files
+sudo cp -r /opt/solvit-ticketing/media ~/solvit_media_backup
+```
+
+For detailed uninstall instructions, see [UNINSTALL_README.md](UNINSTALL_README.md).
 
 ## 🤝 Contributing
 

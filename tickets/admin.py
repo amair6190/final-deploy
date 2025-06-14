@@ -9,6 +9,11 @@ from django import forms
 # Import your other app models
 from .models import Ticket, Message
 
+# Customize admin site headers
+admin.site.site_header = "SolvIT Ticketing System"
+admin.site.site_title = "SolvIT Admin"
+admin.site.index_title = "Welcome to SolvIT Administration"
+
 CustomUser = get_user_model() # Get the CustomUser model
 
 class TicketAdminForm(ModelForm):
