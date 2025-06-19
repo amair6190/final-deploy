@@ -420,7 +420,7 @@ RuntimeDirectory=solvit-ticketing
 WorkingDirectory=$APP_DIR
 Environment="PATH=$APP_DIR/venv/bin"
 Environment="DJANGO_SETTINGS_MODULE=it_ticketing_system.settings_production"
-ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8001 --timeout 60 --keep-alive 2 --max-requests 1000 it_ticketing_system.wsgi:application
+ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8001 --timeout 60 --keep-alive 2 --max-requests 1000 it_ticketing_system.wsgi:application
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 RestartSec=3

@@ -1,10 +1,10 @@
 # SolvIT Ticketing System - Connection Issue Fixed
 
 ## Problem Identified
-The main issue was that Gunicorn was configured to listen only on localhost (127.0.0.1), which meant it wasn't accessible from outside the server.
+The main issue was that Gunicorn was configured to listen only on localhost (127.0.0.1), which meant it wasn't accessible from outside the server. This resulted in `ERR_CONNECTION_REFUSED` errors when trying to connect from another machine.
 
 ## Solution Applied
-We updated the Gunicorn configuration in the systemd service file:
+We updated the Gunicorn configuration in the systemd service file to listen on all network interfaces:
 
 **Changed from:**
 ```
@@ -15,6 +15,9 @@ ExecStart=/opt/solvit-ticketing/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8
 ```
 ExecStart=/opt/solvit-ticketing/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8001 --timeout 60 --keep-alive 2 --max-requests 1000 it_ticketing_system.wsgi:application
 ```
+
+## Permanent Fix
+We've updated all deployment scripts to use `0.0.0.0` by default. Additionally, we created a dedicated fix script `fix_gunicorn_binding.sh` that can be run on any existing deployment to automatically correct this issue.
 
 ## What This Change Does
 - `127.0.0.1` (localhost) - Restricts access to the local machine only

@@ -128,22 +128,38 @@ def is_in_group(user, group_name):
 # --- Customer Views ---
 @login_required
 def customer_dashboard(request):
-    if not is_in_group(request.user, 'Customers'):
-        django_messages.error(request, "Access Denied. This dashboard is for customers only.")
-        if is_in_group(request.user, 'Agents'):
-            return redirect('tickets:agent_dashboard')
-        return redirect('tickets:login')
+    try:
+        # Check user permissions
+        if not is_in_group(request.user, 'Customers'):
+            django_messages.error(request, "Access Denied. This dashboard is for customers only.")
+            if is_in_group(request.user, 'Agents'):
+                return redirect('tickets:agent_dashboard')
+            return redirect('tickets:login')
 
-    # Get all tickets for the current customer
-    tickets = Ticket.objects.filter(customer=request.user).order_by('-created_at')
+        # Get all tickets for the current customer
+        tickets = Ticket.objects.filter(customer=request.user).order_by('-created_at')
+        
+        # Apply filters
+        tickets = apply_ticket_filters(tickets, request)
+
+        context = {
+            'tickets': tickets,
+        }
+        return render(request, 'tickets/customer_dashboard.html', context)
     
-    # Apply filters
-    tickets = apply_ticket_filters(tickets, request)
-
-    context = {
-        'tickets': tickets,
-    }
-    return render(request, 'tickets/customer_dashboard.html', context)
+    except Exception as e:
+        # Log the error
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in customer_dashboard: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Show friendly error to user
+        django_messages.error(request, "An error occurred while loading your dashboard. Our team has been notified.")
+        
+        # Return a basic context as fallback
+        return render(request, 'tickets/customer_dashboard.html', {'tickets': [], 'error': True})
 
 @login_required
 def create_ticket(request):
@@ -386,33 +402,64 @@ class CustomLoginView(DjangoLoginView):
     template_name = 'tickets/login.html'
 
     def form_valid(self, form):
-        remember_me = form.cleaned_data.get('remember_me')
-        if not remember_me:
-            self.request.session.set_expiry(0)
-        else:
-            self.request.session.set_expiry(settings.SESSION_COOKIE_AGE_REMEMBER_ME)
-        self.request.session.modified = True
-        return super().form_valid(form)
+        try:
+            # Get remember_me value (default to False if not present)
+            remember_me = form.cleaned_data.get('remember_me', False)
+            
+            # Handle session expiry
+            if not remember_me:
+                # Session expires when browser closes
+                self.request.session.set_expiry(0)
+            else:
+                # Set longer expiry for "remember me"
+                # Get setting if it exists, otherwise use default (14 days)
+                session_cookie_age = getattr(settings, 'SESSION_COOKIE_AGE_REMEMBER_ME', 
+                                           getattr(settings, 'SESSION_COOKIE_AGE', 60 * 60 * 24 * 14))
+                self.request.session.set_expiry(session_cookie_age)
+            
+            # Mark session as modified
+            self.request.session.modified = True
+            
+            # Call parent form_valid to complete login
+            return super().form_valid(form)
+        except Exception as e:
+            # Log the error
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error during login: {str(e)}")
+            
+            # Add error message if possible
+            if hasattr(self.request, '_messages'):
+                from django.contrib import messages
+                messages.error(self.request, "An error occurred during login. Please try again.")
+            
+            # Return to login page
+            return self.form_invalid(form)
 
     def get_success_url(self):
-        user = self.request.user
-        # Superusers/staff go to agent dashboard (or Django admin)
-        if user.is_superuser or (user.is_staff and not is_in_group(user, 'Customers')): # Staff but not primarily a customer
-            return reverse_lazy('tickets:agent_dashboard') # Or 'admin:index'
+        try:
+            user = self.request.user
+            
+            # Check for superuser/staff status
+            if user.is_superuser or (user.is_staff and not is_in_group(user, 'Customers')):
+                return reverse_lazy('tickets:agent_dashboard')
 
-        if is_in_group(user, 'Agents') or is_in_group(user, 'Admins'):
-            return reverse_lazy('tickets:agent_dashboard')
-        elif is_in_group(user, 'Customers'):
-            return reverse_lazy('tickets:customer_dashboard')
-        
-        # Fallback if no specific group, or if user is staff but also a customer,
-        # default to LOGIN_REDIRECT_URL or home.
-        # This also handles the case where a user is just 'staff' without being in Agent/Admin group.
-        if hasattr(settings, 'LOGIN_REDIRECT_URL'):
-             # Use try-except for reverse_lazy in case LOGIN_REDIRECT_URL is not a named URL pattern
-            try:
-                return reverse_lazy(settings.LOGIN_REDIRECT_URL)
-            except Exception:
-                return settings.LOGIN_REDIRECT_URL # Return as string if not a name
-        return reverse_lazy('home')
+            # Check for group memberships
+            if is_in_group(user, 'Agents') or is_in_group(user, 'Admins'):
+                return reverse_lazy('tickets:agent_dashboard')
+            elif is_in_group(user, 'Customers'):
+                return reverse_lazy('tickets:customer_dashboard')
+            
+            # Default to settings if no matches
+            if hasattr(settings, 'LOGIN_REDIRECT_URL'):
+                try:
+                    return reverse_lazy(settings.LOGIN_REDIRECT_URL)
+                except Exception:
+                    return settings.LOGIN_REDIRECT_URL
+                    
+            # Ultimate fallback
+            return reverse_lazy('home')
+        except Exception:
+            # If anything goes wrong, safely redirect to home
+            return reverse_lazy('home')
 

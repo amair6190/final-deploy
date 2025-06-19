@@ -18,7 +18,11 @@ env = environ.Env(
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.isfile(env_file):
+    environ.Env.read_env(env_file)
+else:
+    print(f"Warning: .env file not found at {env_file}. Using default environment variables.")
 
 # Custom User Model
 AUTH_USER_MODEL = 'tickets.CustomUser'
@@ -88,19 +92,31 @@ TEMPLATES = [
 WSGI_APPLICATION = 'it_ticketing_system.wsgi.application'
 
 # Database Configuration
-DATABASES = {
-    'default': {
-        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'sslmode': 'require' if not DEBUG else 'prefer',
-        },
+# First check if DATABASE_URL is provided and use it if available
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=env('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=not DEBUG
+        )
     }
-}
+else:
+    # Otherwise use individual database settings
+    DATABASES = {
+        'default': {
+            'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
+            'NAME': env('DB_NAME', default='solvit_ticketing'),
+            'USER': env('DB_USER', default='solvit'),
+            'PASSWORD': env('DB_PASSWORD', default='solvitpass'),
+            'HOST': env('DB_HOST', default='localhost'),
+            'PORT': env('DB_PORT', default='5432'),
+            'OPTIONS': {
+                'sslmode': 'require' if not DEBUG else 'prefer',
+            },
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

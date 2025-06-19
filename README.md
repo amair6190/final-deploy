@@ -268,6 +268,15 @@ For detailed uninstall instructions, see [UNINSTALL_README.md](UNINSTALL_README.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📚 Documentation & Troubleshooting
+
+- [Deployment Options](DEPLOYMENT_OPTIONS.md) - Different ways to deploy the system
+- [Manual Deployment Guide](MANUAL_DEPLOYMENT_GUIDE.md) - Step-by-step deployment instructions
+- [Nginx Proxy Manager Guide](NGINX_PROXY_MANAGER_GUIDE.md) - Setting up with NPM
+- [Preventing Connection Issues](PREVENTING_CONNECTION_ISSUES.md) - How to avoid common connection problems
+- [Troubleshooting CSRF](TROUBLESHOOTING_CSRF.md) - Resolving CSRF verification failures
+- [Admin Theming Guide](ADMIN_THEMING_GUIDE.md) - Customizing the admin panel
+
 ## 🆘 Support
 
 For support and questions:

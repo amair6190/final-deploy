@@ -24,7 +24,22 @@ chmod +x deploy-ubuntu-server.sh
 ./deploy-ubuntu-server.sh
 ```
 
-### 🗑️ Uninstall Script
+### � Connection Fix Script
+**File**: `fix_gunicorn_binding.sh`
+**Purpose**: Fixes Gunicorn binding to prevent ERR_CONNECTION_REFUSED errors
+
+**Features**:
+- Automatically detects and fixes Gunicorn binding configuration
+- Updates service to listen on all interfaces instead of just localhost
+- Verifies the fix with connection tests
+- No user input required - automatic fix
+
+**Usage**:
+```bash
+sudo ./fix_gunicorn_binding.sh
+```
+
+### �🗑️ Uninstall Script
 **File**: `uninstall-solvit-ticketing.sh`
 **Purpose**: Complete system removal with safety checks
 
@@ -163,6 +178,38 @@ Before using the main scripts in production:
 
 ### Regular Tasks
 - Database backups: `sudo -u postgres pg_dump test2 > backup.sql`
+
+## 🛠️ Troubleshooting & Fix Scripts
+
+### 🔍 Domain Configuration Verification
+**File**: `verify_domain_setup.sh`
+**Purpose**: Verify and diagnose domain configuration issues
+
+**Features**:
+- Checks DNS resolution for your domain
+- Tests connectivity to application server
+- Verifies CSRF configuration includes your domain
+- Provides guidance for fixing common domain issues
+
+**Usage**:
+```bash
+sudo ./verify_domain_setup.sh
+```
+
+### 🔧 Gunicorn Binding Fix
+**File**: `fix_gunicorn_binding.sh`
+**Purpose**: Fix common connection refused errors by updating Gunicorn binding
+
+**Features**:
+- Detects incorrect Gunicorn binding configuration
+- Updates systemd service file to listen on all interfaces
+- Restarts the service automatically
+- Verifies the fix was applied correctly
+
+**Usage**:
+```bash
+sudo ./fix_gunicorn_binding.sh
+```
 - Log rotation: Configured automatically with systemd
 - Static files update: `python manage.py collectstatic`
 - Security updates: `sudo apt update && sudo apt upgrade`
