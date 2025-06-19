@@ -1,0 +1,20 @@
+[Unit]
+Description=SolvIT Django Ticketing System
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=notify
+User=solvit
+Group=solvit
+RuntimeDirectory=solvit-ticketing
+WorkingDirectory=/opt/solvit-ticketing
+Environment="PATH=/opt/solvit-ticketing/venv/bin"
+Environment="DJANGO_SETTINGS_MODULE=it_ticketing_system.settings_production"
+ExecStart=/opt/solvit-ticketing/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8001 --timeout 60 --keep-alive 2 --max-requests 1000 it_ticketing_system.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

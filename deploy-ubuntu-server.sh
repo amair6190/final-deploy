@@ -258,7 +258,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8001',
     'http://127.0.0.1:8080',
     'http://localhost:8001',
-    'http://localhost:8080',
+    'http://support.solvitservices.com',
+    'http://10.0.0.95',
 ]
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False

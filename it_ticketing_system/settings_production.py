@@ -191,6 +191,12 @@ CSRF_COOKIE_HTTPONLY = True         # Prevent JavaScript access
 CSRF_COOKIE_SAMESITE = 'Strict'     # Additional CSRF protection
 CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
 
+# CSRF Trusted Origins (for cross-origin requests with domains)
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
+    'https://support.solvitservices.com',
+    'https://www.support.solvitservices.com',
+])
+
 # Additional Security Settings
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 SECURE_CROSS_ORIGIN_EMBEDDER_POLICY = 'require-corp'
