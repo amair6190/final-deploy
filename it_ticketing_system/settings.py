@@ -30,12 +30,7 @@ AUTHENTICATION_BACKENDS = [
 # Application definition
 
 INSTALLED_APPS = [
-    # Admin themes (uncomment the one you want to use)
-    'jazzmin',  # Modern Bootstrap-based theme - uncomment to use
-    # 'grappelli',  # Classic professional theme - uncomment to use
-    # 'admin_interface',  # Feature-rich theme - uncomment to use
-    # 'colorfield',  # Required for admin_interface
-    
+    # Standard Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -178,9 +173,7 @@ ADMIN_SITE_HEADER = "SolvIT Ticketing System"
 ADMIN_SITE_TITLE = "SolvIT Admin"
 ADMIN_INDEX_TITLE = "Welcome to SolvIT Administration"
 
-# Import Jazzmin settings if using jazzmin theme
-# Uncomment the next line if you enable jazzmin in INSTALLED_APPS
-from .jazzmin_settings import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS
+# Jazzmin theme has been removed
 
 # Session Settings
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 1  # 1 day

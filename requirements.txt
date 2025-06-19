@@ -1,5 +1,5 @@
 # Core Django framework
-Django>=4.2.0,<5.0.0  # More compatible with Jazzmin 3.0.0
+Django>=5.2.1,<5.3  # Back to the original version
 
 # Web server
 gunicorn==21.2.0
@@ -17,8 +17,7 @@ whitenoise==6.6.0
 django-crispy-forms
 crispy-bootstrap5
 
-# Admin Interface
-django-jazzmin==3.0.0  # Explicitly set Jazzmin version
+# No custom admin interface
 
 # Security
 django-ratelimit==4.1.0
