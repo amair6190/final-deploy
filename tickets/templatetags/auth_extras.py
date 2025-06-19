@@ -15,3 +15,15 @@ def is_in_group(user, group_name):
         except Group.DoesNotExist:
             return False # Group doesn't exist, so user can't be in it
     return False # User not authenticated, so can't be in any group
+
+@register.filter(name='length_is')
+def length_is(value, arg):
+    """
+    Return a boolean if the value's length is the argument.
+    This is a reimplementation of the Django length_is filter.
+    """
+    try:
+        length = len(value)
+        return length == int(arg)
+    except (ValueError, TypeError):
+        return False

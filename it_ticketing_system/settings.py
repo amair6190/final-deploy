@@ -72,6 +72,11 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'tickets.context_processors.user_groups', # If you create this for user group info in all templates
             ],
+            'builtins': [
+                'django.templatetags.static',
+                'django.template.defaulttags',
+                'django.template.defaultfilters',
+            ],
         },
     },
 ]
