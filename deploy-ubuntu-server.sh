@@ -212,20 +212,63 @@ sudo -u postgres psql -d $DB_NAME -c "ALTER SCHEMA public OWNER TO $DB_USER;" ||
 
 log "✅ Database created successfully: $DB_NAME with user: $DB_USER"
 
-# Create Django production settings
-log "Creating Django production settings..."
+# Generate a secure secret key for this deployment
+GENERATED_SECRET_KEY="solvit-production-secret-key-$(date +%s)-$(openssl rand -hex 16)"
+
+# Create production URL configuration for media files FIRST
+log "Creating production URL configuration for media files..."
+cat > it_ticketing_system/urls_production.py << 'EOF'
+"""
+Production URL configuration for it_ticketing_system project.
+Includes media file serving for production environments.
+"""
+from django.contrib import admin
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.static import serve
+from django.urls import re_path
+from tickets.views import home
+
+app_name = 'tickets'
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
+    path('tickets/', include('tickets.urls')),
+    path('', home, name='home'),
+]
+
+# Serve media files in production (for attachments and uploads)
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.MEDIA_ROOT,
+    }),
+]
+
+# Also ensure static files are served
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+EOF
+
+# Create Django production settings optimized for NPM (external proxy)
+log "Creating Django production settings for NPM..."
 cat > it_ticketing_system/settings_production.py << EOF
 import os
 from .settings import *
 
-# Production settings
+# Production settings optimized for NPM (Nginx Proxy Manager)
 DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']  # Update with your domain
 
-# Middleware with WhiteNoise for static files
+# Use production URL configuration for media file handling
+ROOT_URLCONF = 'it_ticketing_system.urls_production'
+
+# Middleware with WhiteNoise for static files (NPM compatible)
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise for static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Essential for NPM setups
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -233,6 +276,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Custom middleware for serving media files in production
+WHITENOISE_MEDIA_PREFIX = '/media/'
 
 # Database configuration
 DATABASES = {
@@ -247,38 +293,50 @@ DATABASES = {
 }
 
 # Security settings
-SECRET_KEY = 'solvit-production-secret-key-$(date +%s)-$(openssl rand -hex 16)'
-SECURE_SSL_REDIRECT = False  # Set to True when using HTTPS
+SECRET_KEY = '$GENERATED_SECRET_KEY'
+SECURE_SSL_REDIRECT = False  # Set to True when using HTTPS with NPM
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = False  # Set to True when using HTTPS
 CSRF_COOKIE_SECURE = False  # Set to True when using HTTPS
 
-# CSRF Settings
+# CSRF Settings for NPM
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8001',
-    'http://127.0.0.1:8080',
     'http://localhost:8001',
     'http://support.solvitservices.com',
+    'https://support.solvitservices.com',
     'http://10.0.0.95',
 ]
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 
-# Static and media files
+# Static and media files - Optimized for NPM
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# WhiteNoise for static files serving
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# WhiteNoise configuration for NPM compatibility
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = False
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Additional static files directories
+# Enable WhiteNoise to serve media files in production (for attachments)
+WHITENOISE_MAX_AGE = 31536000  # 1 year cache for static files
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'pdf', 'svg']
+
+# Static files directories - Ensure all themes are collected
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# Logging - Simplified and reliable
+# Static files finders - Ensure all CSS files are found
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+# Logging - Production ready
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -287,17 +345,29 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': True,
         },
     },
 }
 
-print("✅ SolvIT Production settings loaded")
+print("✅ SolvIT Production settings loaded for NPM")
+EOF
+
+# Create .env file with the secret key for consistency
+cat > .env << EOF
+SECRET_KEY=$GENERATED_SECRET_KEY
+DJANGO_SETTINGS_MODULE=it_ticketing_system.settings_production
+DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME
 EOF
 
 # Set environment variables
@@ -313,17 +383,70 @@ mkdir -p logs
 # Run migrations
 python manage.py migrate --settings=it_ticketing_system.settings_production
 
-# Collect static files with production settings
-log "Collecting static files..."
-python manage.py collectstatic --noinput --settings=it_ticketing_system.settings_production
+# Collect static files with enhanced debugging for NPM
+log "Collecting static files for NPM deployment..."
+export SECRET_KEY="$GENERATED_SECRET_KEY"
+export DJANGO_SETTINGS_MODULE=it_ticketing_system.settings_production
 
-# Verify static files were collected
+# Clear any existing static files and collect fresh
+rm -rf staticfiles/*
+python manage.py collectstatic --noinput --clear --settings=it_ticketing_system.settings_production
+
+# Verify critical static files were collected
 if [ ! -d "staticfiles/admin" ]; then
-    warning "Static files collection may have failed. Retrying..."
-    python manage.py collectstatic --noinput --clear --settings=it_ticketing_system.settings_production
+    warning "Django admin static files missing. Retrying collectstatic..."
+    python manage.py collectstatic --noinput --settings=it_ticketing_system.settings_production
 fi
 
-log "✅ Static files collected successfully"
+# Check specifically for the ticket theme CSS
+if [ ! -f "staticfiles/css/ticket_page_solvit_theme.css" ]; then
+    warning "Ticket theme CSS not found in staticfiles!"
+    echo "Checking source file..."
+    if [ -f "static/css/ticket_page_solvit_theme.css" ]; then
+        log "Source theme file exists, manually copying..."
+        mkdir -p staticfiles/css/
+        cp static/css/ticket_page_solvit_theme.css staticfiles/css/
+        log "✅ Manually copied ticket theme CSS"
+    else
+        error "Source ticket theme CSS file not found in static/css/"
+    fi
+else
+    log "✅ Ticket theme CSS found in staticfiles"
+fi
+
+# Verify all theme files are present
+THEME_FILES=("login_solvit_theme.css" "registration_solvit_theme.css" "dashboard_solvit_theme.css" "ticket_page_solvit_theme.css" "create_ticket_theme.css" "home_page_theme.css")
+for theme_file in "${THEME_FILES[@]}"; do
+    if [ -f "staticfiles/css/$theme_file" ]; then
+        log "✅ $theme_file collected successfully"
+    else
+        warning "❌ $theme_file missing from staticfiles"
+        # Try to copy manually if source exists
+        if [ -f "static/css/$theme_file" ]; then
+            cp "static/css/$theme_file" "staticfiles/css/"
+            log "✅ Manually copied $theme_file"
+        fi
+    fi
+done
+
+# Create media directory for file uploads (attachments)
+log "Setting up media directory for file uploads..."
+mkdir -p media/ticket_attachments/
+mkdir -p media/message_attachments/
+mkdir -p media/profile_pics/
+
+# Create system user for the application first
+log "Creating system user for the application..."
+useradd -r -d $APP_DIR -s /bin/false solvit || true
+
+# Set proper permissions for static and media files (NPM compatibility)
+chmod -R 755 staticfiles/
+chmod -R 755 media/
+chown -R solvit:solvit staticfiles/
+chown -R solvit:solvit media/
+chown -R solvit:solvit $APP_DIR
+
+log "✅ Static files collected and media directories configured for NPM"
 
 # Manually copy Jazzmin static files (workaround for Django collectstatic not detecting them)
 log "Copying Jazzmin theme static files..."
@@ -399,16 +522,15 @@ else:
     print('ℹ️ Admin user already exists')
 "
 
-# Create system user for the application
-log "Creating system user for the application..."
-useradd -r -d $APP_DIR -s /bin/false solvit || true
-chown -R solvit:solvit $APP_DIR
+# Fix WSGI configuration to use production settings
+log "Configuring WSGI for production..."
+sed -i "s/it_ticketing_system.settings/it_ticketing_system.settings_production/" it_ticketing_system/wsgi.py
 
-# Create Gunicorn systemd service (running on port 8000 for your proxy server)
-log "Creating Gunicorn systemd service..."
+# Create Gunicorn systemd service optimized for NPM
+log "Creating Gunicorn systemd service for NPM..."
 cat > /etc/systemd/system/solvit-ticketing.service << EOF
 [Unit]
-Description=SolvIT Django Ticketing System
+Description=SolvIT Django Ticketing System (NPM Compatible)
 After=network.target postgresql.service
 Requires=postgresql.service
 
@@ -420,7 +542,8 @@ RuntimeDirectory=solvit-ticketing
 WorkingDirectory=$APP_DIR
 Environment="PATH=$APP_DIR/venv/bin"
 Environment="DJANGO_SETTINGS_MODULE=it_ticketing_system.settings_production"
-ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8001 --timeout 60 --keep-alive 2 --max-requests 1000 it_ticketing_system.wsgi:application
+Environment="SECRET_KEY=$GENERATED_SECRET_KEY"
+ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8001 --timeout 60 --keep-alive 2 --max-requests 1000 --access-logfile - --error-logfile - it_ticketing_system.wsgi:application
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 RestartSec=3
@@ -429,48 +552,13 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 
-# Note: No Nginx configuration - you'll configure your existing proxy server
+# Note: Skip local Nginx setup since you're using NPM (external)
+log "Skipping local Nginx setup - using NPM (Nginx Proxy Manager)"
+warning "Remember to configure NPM to proxy to http://127.0.0.1:8001"
 
-# Create Nginx configuration for static files (on port 8080 to avoid conflicts)
-log "Creating Nginx configuration for static files..."
-cat > /etc/nginx/sites-available/solvit-static << EOF
-server {
-    listen 8080;
-    server_name localhost;
-    
-    # Serve static files
-    location /static/ {
-        alias $APP_DIR/staticfiles/;
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-        add_header Access-Control-Allow-Origin "*";
-    }
-    
-    # Serve media files
-    location /media/ {
-        alias $APP_DIR/media/;
-        expires 30d;
-        add_header Access-Control-Allow-Origin "*";
-    }
-    
-    # Proxy everything else to Django
-    location / {
-        proxy_pass http://127.0.0.1:8001;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_redirect off;
-    }
-}
-EOF
-
-# Enable Nginx site (but handle port conflicts gracefully)
-ln -sf /etc/nginx/sites-available/solvit-static /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
-
-# Test Nginx configuration
-nginx -t || warning "Nginx configuration test failed - will try to start anyway"
+# Disable local Nginx to avoid conflicts with NPM
+systemctl stop nginx 2>/dev/null || true
+systemctl disable nginx 2>/dev/null || true
 
 # Create log file
 touch /var/log/solvit-ticketing.log
@@ -499,18 +587,41 @@ sleep 5
 # Check service status
 log "Checking service status..."
 systemctl status solvit-ticketing --no-pager || warning "SolvIT service may have issues"
-systemctl status nginx --no-pager || warning "Nginx may have issues - static files will be served by Django"
 
-# Test the application
-log "Testing application..."
-if curl -s http://127.0.0.1:8080/ > /dev/null 2>&1; then
-    log "✅ Full application with styling is responding on port 8080!"
-    MAIN_URL="http://127.0.0.1:8080/"
-elif curl -s http://127.0.0.1:8001/ > /dev/null 2>&1; then
+# Test the application directly (no local Nginx)
+log "Testing Django application..."
+if curl -s http://127.0.0.1:8001/ > /dev/null 2>&1; then
     log "✅ Django application is responding on port 8001!"
     MAIN_URL="http://127.0.0.1:8001/"
+    
+    # Test static file serving
+    if curl -s http://127.0.0.1:8001/static/css/ticket_page_solvit_theme.css > /dev/null 2>&1; then
+        log "✅ Static files (including ticket theme) are being served correctly!"
+    else
+        warning "Static files may not be served correctly - check WhiteNoise configuration"
+    fi
+    
+    # Test media file serving by testing an actual file if it exists
+    if ls media/message_attachments/*.png >/dev/null 2>&1; then
+        FIRST_MEDIA_FILE=$(ls media/message_attachments/*.png | head -1 | sed 's|media/||')
+        if curl -s "http://127.0.0.1:8001/media/$FIRST_MEDIA_FILE" > /dev/null 2>&1; then
+            log "✅ Media files (attachments) are being served correctly!"
+        else
+            warning "Media files may not be served correctly - attachment downloads may fail"
+        fi
+    else
+        # Create and test a simple media file
+        echo "test" > media/test.txt
+        chown solvit:solvit media/test.txt
+        if curl -s http://127.0.0.1:8001/media/test.txt > /dev/null 2>&1; then
+            log "✅ Media files directory is accessible for attachments!"
+            rm -f media/test.txt
+        else
+            warning "Media files may not be served correctly - attachment downloads may fail"
+        fi
+    fi
 else
-    warning "Application may not be responding yet"
+    warning "Django application may not be responding yet"
     MAIN_URL="http://127.0.0.1:8001/"
 fi
 
@@ -547,6 +658,7 @@ Add this to your existing Nginx server configuration:
     location /media/ {
         alias $APP_DIR/media/;
         expires 30d;
+        add_header Cache-Control "public, no-cache";
     }
 
     location / {
@@ -556,6 +668,7 @@ Add this to your existing Nginx server configuration:
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_redirect off;
+        client_max_body_size 100M;  # Allow large file uploads
     }
 
 Management Commands:
@@ -620,6 +733,7 @@ echo ""
 echo -e "${YELLOW}    location /media/ {${NC}"
 echo -e "${YELLOW}        alias $APP_DIR/media/;${NC}"
 echo -e "${YELLOW}        expires 30d;${NC}"
+echo -e "${YELLOW}        add_header Cache-Control \"public, no-cache\";${NC}"
 echo -e "${YELLOW}    }${NC}"
 echo ""
 echo -e "${YELLOW}    location / {${NC}"
@@ -629,6 +743,7 @@ echo -e "${YELLOW}        proxy_set_header X-Real-IP \$remote_addr;${NC}"
 echo -e "${YELLOW}        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;${NC}"
 echo -e "${YELLOW}        proxy_set_header X-Forwarded-Proto \$scheme;${NC}"
 echo -e "${YELLOW}        proxy_redirect off;${NC}"
+echo -e "${YELLOW}        client_max_body_size 100M;  # Allow large file uploads${NC}"
 echo -e "${YELLOW}    }${NC}"
 echo ""
 echo -e "${BLUE}🔧 Management Commands:${NC}"
